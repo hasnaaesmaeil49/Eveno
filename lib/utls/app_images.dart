@@ -1,0 +1,77 @@
+
+class AppImages{
+  static  String logo= "assets/images/logo_splash_light.png";
+  static  String branding="assets/images/boarding_splash_light.png";
+  static  String introLogo="assets/images/intro_logo_light.png";
+  static  String intro1ImageLight="assets/images/intro1_lighr.png";
+  static  String intro2ImageLight="assets/images/intro2_light.png";
+  static  String intro3ImageLight="assets/images/intro3_light.png";
+  static  String intro4ImageLight="assets/images/intro4_light.png";
+  static  String intro1ImageDark="assets/images/introductio1_img_dark.png";
+  static  String intro2ImageDark="assets/images/intro2_img_dark.png";
+  static  String intro3ImageDark="assets/images/intro3_img_dark.png";
+  static  String intro4ImageDark="assets/images/intro4_img_dark.png";
+  static  String egyptIcon="assets/images/eg_icon_light.png";
+  static  String americaIcon="assets/images/eng_icon_light.png";
+  static  String  googleIcon="assets/images/google_icon_light.png";
+  static  String  moonLight="assets/images/Moon_light.png";
+  static  String moonDark="assets/images/Moon_dark_icon.png";
+  static  String sunLight="assets/images/Sun_light.png";
+  static  String  sunDark="assets/images/Sun_dark_icon.png";
+  static  String emailIconLight="assets/images/email_icon_light.png";
+  static  String emailIconDark="assets/images/mail_dark_icon.png";
+  static  String passwordIconLight="assets/images/password_icon_light.png";
+  static  String passwordIconDark="assets/images/password_dark_icon.png";
+  static  String eyeIconLight="assets/images/eye_icon_light.png";
+  static  String eyeIconDark="assets/images/eye_dark_icon.png";
+  static  String userIconLight="assets/images/user_icon_light.png";
+  static  String userIconDark="assets/images/user_dark_icon.png";
+  static  String forgetpasswordLight="assets/images/forget_password_img_light.png";
+  static  String forgetpasswordDark="assets/images/forgetpassword_img_dark.png";
+  static  String  home="assets/images/home_light.png";
+  static  String homeFill="assets/images/home_full_light.png";
+  static  String map="assets/images/map_light.png";
+  static  String mapFill="assets/images/map_fill_light.png";
+  static  String heart="assets/images/heart_light.png";
+  static  String  heartFill="assets/images/heart_fill_light.png";
+  static  String profile="assets/images/profile_light.png";
+  static  String profileFill="assets/images/profile_fill_light.png";
+  static  String themeLightIcon="assets/images/theme_light_icon.png";
+  static  String allIconLight="assets/images/all_light_icon.png";
+  static  String birthdayLightIcon="assets/images/birthday_light_icon.png";
+  static  String sportLightIcon="assets/images/sport_light_icon.png";
+  static  String birthdayImgLight="assets/images/birthday_img_light.png";
+  static  String birthdayImgDark="assets/images/birthday_img_da.png";
+  static  String  bookLightIcon="assets/images/book_light_icon.png";
+  static  String bookDarkIcon="assets/images/book_dart_icon.png";
+  static  String bookImgLight="assets/images/book_img_light.png";
+  static  String bookImageDark="assets/images/Book Club_img_dark.png";
+  static  String eatingImgLight="assets/images/eating_img_light.png";
+  static  String eatingImgDark="assets/images/eating_img_dark.png";
+  static  String exhibitionImgLight="assets/images/exciption_img_light.png";
+  static  String exhibitionImgDark="assets/images/exhibition_img_dark.png";
+  static  String gamingImgLight="assets/images/gaming_img_light.png";
+  static  String gamingImgDark="assets/images/gaming_img_dark.png";
+  static  String holidayImgLight="assets/images/holiday_img_light.png";
+  static  String holidayImgDark="assets/images/holiday_img_dark.png";
+  static  String meetingImgLight="assets/images/meeting_img_light.png";
+  static  String meetingImgDark="assets/images/meeting_img_dark.png";
+  static  String sportImgLight="assets/images/sport_img_light.png";
+  static  String sportImgDark="assets/images/sport_img_dark.png";
+  static  String workShopImgLight="assets/images/workshop_img_light.png";
+  static  String  workShopImgDark="assets/images/workshop_img_dark.png";
+  static  String locationLightIcon="assets/images/location_light_icon.png";
+  static  String locationDarkIcon="assets/images/location_dark_icon.png";
+  static  String routeImg="assets/images/route_img_light.png";
+  static  String logoutIcon="assets/images/logout_icon.png";
+  static  String birthdayDarkIcon="assets/images/virthday_dark_icon.png";
+  static  String clockDarkIcon="assets/images/vlock_dark_icon.png";
+  static  String clockLightIcon="assets/images/clock_light_icon.png";
+  static  String calndreDarkIcon="assets/images/calender_dark_icon.png";
+  static  String calnderLightIcon="assets/images/event_date_light_icon.png";
+  static  String editLightIcon="assets/images/edit_light_icon.png";
+  static  String editDarkIcon="assets/images/edit_dark_icon.png";
+  
+
+
+}
