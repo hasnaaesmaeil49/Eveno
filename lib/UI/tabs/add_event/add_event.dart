@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer';
 import 'package:evently_app/UI/tabs/add_event/add_event_widgets/custom_date_or_time.dart';
 import 'package:evently_app/UI/tabs/home_tab/home_widgets/tab_event_widget.dart';
 import 'package:evently_app/UI/tabs/map_tab/map.dart';
@@ -13,11 +14,12 @@ import 'package:evently_app/utls/app_images.dart';
 import 'package:evently_app/utls/app_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:evently_app/UI/home/home_screen.dart';
-
+import 'package:geocoding/geocoding.dart';
 class AddEvent extends StatefulWidget {
   const AddEvent({super.key});
 
@@ -32,15 +34,17 @@ class _AddEventState extends State<AddEvent> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String formatTime = "";
-
+  bool isFree = true;
   var titleController = TextEditingController();
   var descriptionController = TextEditingController();
   var ticketsController = TextEditingController();
   var customEventTypeController = TextEditingController();
-
+  var ticketPriceController = TextEditingController();
+  final double ticketPrice = 0.0;
   String? selectedImage = '';
   String? selectedEvent = '';
   String? selectedLocation;
+  String? selectedAddress;
   File? customImage;
 
   late EventListProvider eventProvider;
@@ -88,6 +92,26 @@ class _AddEventState extends State<AddEvent> {
     }
   }
 
+
+  void getAddressFromLatLng(LatLng location) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        setState(() {
+          selectedLocation = '${location.latitude},${location.longitude}';
+          selectedAddress = '${place.street}, ${place.locality}, ${place.country}';
+        });
+      }
+    } catch (e) {
+      print('Error getting address: $e');
+    }
+  }
+
+
   void addEvent() {
     if (formKey.currentState?.validate() == true) {
       final newEvent = Event(
@@ -101,8 +125,11 @@ class _AddEventState extends State<AddEvent> {
         eventTime: formatTime,
         eventLocation: selectedLocation ?? '',
         availableTickets: int.tryParse(ticketsController.text) ?? 0,
-      );
+        isFree: isFree,
+        ticketPrice: isFree ? 0.0 : double.tryParse(ticketPriceController.text) ?? 0.0,
 
+      );
+      log('$newEvent');
       FirebaseUtls.addEventToFireStore(newEvent);
       eventProvider.getAllEvents();
       Provider.of<EventListProvider>(context, listen: false).addEvent(newEvent);
@@ -239,11 +266,36 @@ class _AddEventState extends State<AddEvent> {
                   hintText: AppLocalizations.of(context)!.event_description,
                 ),
                 const SizedBox(height: 16),
+
                 CustomTextField(
                   controller: ticketsController,
                   keyboardType: TextInputType.number,
                   hintText: 'عدد التذاكر المتاحة',
                 ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: isFree,
+                      onChanged: (value) {
+                        setState(() {
+                          isFree = value ?? true;
+                        });
+                      },
+                    ),
+                    Text(AppLocalizations.of(context)!.free_event, style: AppStyle.blue16Medium),
+                  ],
+                ),
+                // إضافة TextField لـ ticketPrice
+                if (!isFree)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: CustomTextField(
+                      controller: ticketPriceController,
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      hintText: AppLocalizations.of(context)!.ticket_price,
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 CustomDateOrTime(
                   imageDateOrTime: Theme.of(context).brightness == Brightness.dark
@@ -274,7 +326,7 @@ class _AddEventState extends State<AddEvent> {
                       MaterialPageRoute(builder: (context) => MapTab()),
                     );
                     if (location != null) {
-                      setState(() => selectedLocation = location);
+                      getAddressFromLatLng(location);
                     }
                   },
                   child: Container(
@@ -289,7 +341,7 @@ class _AddEventState extends State<AddEvent> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            selectedLocation ?? AppLocalizations.of(context)!.choose_event_location,
+                            selectedAddress ?? AppLocalizations.of(context)!.choose_event_location,
                             style: AppStyle.blue16bold,
                           ),
                         ),

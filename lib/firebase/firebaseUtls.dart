@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:evently_app/firebase/event_model.dart';
+
 
 class FirebaseUtls {
   static  CollectionReference<Event>getEventCollection(){
@@ -23,4 +26,11 @@ class FirebaseUtls {
         .doc(id)
         .update(data);
   }
+  static Future<void> deleteEvent(String id) async {
+    await FirebaseFirestore.instance
+        .collection(Event.collectionName)
+        .doc(id)
+        .delete();
+  }
+
 }

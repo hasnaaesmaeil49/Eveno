@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapTab extends StatefulWidget {
   const MapTab({super.key});
@@ -10,50 +9,66 @@ class MapTab extends StatefulWidget {
 }
 
 class _MapTabState extends State<MapTab> {
-  LatLng selectedLocation = LatLng(30.033333, 31.233334); // القاهرة
+  final LatLng selectedLocation = const LatLng(30.033333, 31.233334);
+  bool isMapReady = false;
+  Set<Marker> _markers = {};
 
-  void _onTapMap(LatLng latlng) {
+  @override
+  void initState() {
+    super.initState();
+    _markers.add(Marker(
+      markerId: const MarkerId('initial'),
+      position: selectedLocation,
+    ));
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
     setState(() {
-      selectedLocation = latlng;
+      isMapReady = true;
     });
   }
 
+  void _onTapMap(LatLng latlng) {
+    setState(() {
+      _markers = {
+        Marker(
+          markerId: const MarkerId('selected_location'),
+          position: latlng,
+        ),
+
+      };
+    });
+    print(latlng);
+  }
+
   void _onConfirmLocation() {
-    Navigator.pop(context, selectedLocation);
+    Navigator.pop(context, _markers.first.position);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('اختر الموقع'),
-      ),
+      appBar: AppBar(title: const Text('اختر الموقع')),
       body: Stack(
         children: [
-          FlutterMap(
-            options: MapOptions(
-              center: selectedLocation, // الموقع الافتراضي
-              zoom: 13.0, // تكبير الخريطة
-              onTap: (_, LatLng latlng) => _onTapMap(latlng), // تنفيذ دالة عند الضغط على الخريطة
+          if (!isMapReady)
+            const Center(child: CircularProgressIndicator()),
+
+          Opacity(
+            opacity: isMapReady ? 1.0 : 0.0,
+            child: GoogleMap(
+              onMapCreated: _onMapCreated,
+              onTap: _onTapMap,
+              initialCameraPosition: CameraPosition(
+                target: selectedLocation,
+                zoom: 13,
+              ),
+              markers: _markers,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
-                userAgentPackageName: 'com.example.app',
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: selectedLocation, // الموقع المحدد
-                    width: 40.0,  // عرض المارك
-                    height: 40.0, // ارتفاع المارك
-                    child: const Icon(Icons.location_on, color: Colors.red, size: 40), // الأيقونة
-                  ),
-                ],
-              ),
-            ],
           ),
+
           Positioned(
             bottom: 16,
             left: 16,

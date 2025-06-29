@@ -1,3 +1,6 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:evently_app/UI/tabs/add_event/add_event_widgets/custom_date_or_time.dart';
 import 'package:evently_app/UI/tabs/home_tab/home_widgets/tab_event_widget.dart';
 import 'package:evently_app/UI/tabs/map_tab/map.dart';
@@ -12,10 +15,13 @@ import 'package:evently_app/utls/app_images.dart';
 import 'package:evently_app/utls/app_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:evently_app/UI/home/home_screen.dart';
 import 'package:evently_app/UI/tabs/edit_event/edit_event.dart';
+
 class EditEvent extends StatefulWidget {
   final Event event;
   final int index;
@@ -34,25 +40,42 @@ class _EditEventState extends State<EditEvent> {
   String formatTime = "";
   var titleController = TextEditingController();
   var descriptionController = TextEditingController();
+  var ticketPriceController = TextEditingController();
   String? selectedImage;
   String? selectedEvent;
   String? selectedLocation;
   late EventListProvider eventProvider;
-
+  bool isFree = true;
   List<String> eventsNameList = [];
   List<String> eventImageList = [];
+  String? selectedAddress;
+  LatLng? coordinates;
+  String? readableAddress;
 
   @override
   void initState() {
     super.initState();
 
-    /// ✅ تأمين البيانات من الانهيار عند فصل الاتصال أو null
     if (widget.event != null) {
       titleController.text = widget.event.eventTitle;
       descriptionController.text = widget.event.eventDescription;
       selectedDate = widget.event.eventDate;
       formatTime = widget.event.eventTime;
       selectedLocation = widget.event.eventLocation;
+      isFree = widget.event.isFree;
+      ticketPriceController.text = widget.event.ticketPrice.toStringAsFixed(2);
+      selectedEvent = widget.event.eventName;
+      selectedImage = widget.event.eventImage;
+    }
+    if (widget.event.eventLocation is String) {
+      final parts = widget.event.eventLocation.split(',');
+      if (parts.length == 2) {
+        final lat = double.tryParse(parts[0]);
+        final lng = double.tryParse(parts[1]);
+        if (lat != null && lng != null) {
+          getAddressFromLatLng(LatLng(lat, lng));
+        }
+      }
     }
   }
 
@@ -73,15 +96,33 @@ class _EditEventState extends State<EditEvent> {
       AppLocalizations.of(context)!.eating,
     ];
     eventImageList = [
-      Theme.of(context).brightness == Brightness.dark ? AppImages.sportImgDark : AppImages.sportImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.birthdayImgDark : AppImages.birthdayImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.meetingImgDark : AppImages.meetingImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.gamingImgDark : AppImages.gamingImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.workShopImgDark : AppImages.workShopImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.bookImageDark : AppImages.bookImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.exhibitionImgDark : AppImages.exhibitionImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.holidayImgDark : AppImages.holidayImgLight,
-      Theme.of(context).brightness == Brightness.dark ? AppImages.eatingImgDark : AppImages.eatingImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.sportImgDark
+          : AppImages.sportImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.birthdayImgDark
+          : AppImages.birthdayImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.meetingImgDark
+          : AppImages.meetingImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.gamingImgDark
+          : AppImages.gamingImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.workShopImgDark
+          : AppImages.workShopImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.bookImageDark
+          : AppImages.bookImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.exhibitionImgDark
+          : AppImages.exhibitionImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.holidayImgDark
+          : AppImages.holidayImgLight,
+      Theme.of(context).brightness == Brightness.dark
+          ? AppImages.eatingImgDark
+          : AppImages.eatingImgLight,
     ];
 
     /// ✅ لو مفيش بيانات event موجودة - نعرض رسالة محترمة بدل crash
@@ -93,8 +134,8 @@ class _EditEventState extends State<EditEvent> {
     }
 
     selectedIndex = eventsNameList.indexOf(widget.event.eventName);
-    selectedImage = eventImageList[selectedIndex];
-    selectedEvent = eventsNameList[selectedIndex];
+    // selectedImage = eventImageList[selectedIndex];
+    // selectedEvent = eventsNameList[selectedIndex];
 
     // ✅ باقي كودك بدون أي تعديل
     var height = MediaQuery.of(context).size.height;
@@ -102,20 +143,36 @@ class _EditEventState extends State<EditEvent> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.edit_event, style: AppStyle.blue16bold),
+        title: Text(AppLocalizations.of(context)!.edit_event,
+            style: AppStyle.blue16bold),
         centerTitle: true,
-        backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColor.primaryDark : AppColor.whiteColor,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColor.primaryDark
+            : AppColor.whiteColor,
         iconTheme: const IconThemeData(color: AppColor.babyBlueColor),
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: width * 0.04, vertical: height * 0.02),
+        padding: EdgeInsets.symmetric(
+            horizontal: width * 0.04, vertical: height * 0.02),
         child: SingleChildScrollView(
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(selectedImage!),
-              ),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: height * 0.31,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: AppColor.babyBlueColor,
+                        width: 2,
+                      ),
+                      image: DecorationImage(
+                        image: _getImageProvider(widget.event.eventImage),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )),
               SizedBox(height: height * 0.02),
               Container(
                 height: height * 0.05,
@@ -158,7 +215,30 @@ class _EditEventState extends State<EditEvent> {
                     buildDescriptionField(height),
                     buildDatePicker(context),
                     buildTimePicker(context),
+                    SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isFree,
+                          onChanged: (value) {
+                            setState(() {
+                              isFree = value ?? true;
+                            });
+                          },
+                        ),
+                        Text(AppLocalizations.of(context)!.free_event,
+                            style: AppStyle.blue16Medium),
+                      ],
+                    ),
+                    // إضافة TextField لـ ticketPrice
+                    if (!isFree)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: buildTicketPriceField(height),
+                      ),
+
                     buildLocationPicker(context, height, width),
+                    SizedBox(height: 10),
                     CustomElevatedButton(
                       text: AppLocalizations.of(context)!.edit_event,
                       textStyle: AppStyle.white16bold,
@@ -174,102 +254,188 @@ class _EditEventState extends State<EditEvent> {
     );
   }
 
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http') || path.startsWith('https')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('/data')) {
+      return FileImage(File(path));
+    } else {
+      return AssetImage(path);
+    }
+  }
+
   Widget buildTitleField(double height) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(AppLocalizations.of(context)!.title, style: Theme.of(context).brightness == Brightness.dark ? AppStyle.white16bold : AppStyle.black16Bold),
-      SizedBox(height: height * 0.01),
-      CustomTextField(
-        controller: titleController,
-        validator: (text) => text == null || text.isEmpty ? AppLocalizations.of(context)!.please_enter_event_title : null,
-        hintText: AppLocalizations.of(context)!.event_title,
-        style: Theme.of(context).brightness == Brightness.dark ? AppStyle.white16Medium : AppStyle.grey16Medium,
-        prefixIcon: Theme.of(context).brightness == Brightness.dark ? Image.asset(AppImages.editDarkIcon) : Image.asset(AppImages.editLightIcon),
-      ),
-      SizedBox(height: height * 0.02),
-    ],
-  );
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(AppLocalizations.of(context)!.title,
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? AppStyle.white16bold
+                  : AppStyle.black16Bold),
+          SizedBox(height: height * 0.01),
+          CustomTextField(
+            controller: titleController,
+            validator: (text) => text == null || text.isEmpty
+                ? AppLocalizations.of(context)!.please_enter_event_title
+                : null,
+            hintText: AppLocalizations.of(context)!.event_title,
+            style: Theme.of(context).brightness == Brightness.dark
+                ? AppStyle.white16Medium
+                : AppStyle.grey16Medium,
+            prefixIcon: Theme.of(context).brightness == Brightness.dark
+                ? Image.asset(AppImages.editDarkIcon)
+                : Image.asset(AppImages.editLightIcon),
+          ),
+          SizedBox(height: height * 0.02),
+        ],
+      );
+  Widget buildTicketPriceField(double height) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(AppLocalizations.of(context)!.ticket_price,
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? AppStyle.white16bold
+                  : AppStyle.black16Bold),
+          SizedBox(height: height * 0.01),
+          CustomTextField(
+            controller: ticketPriceController,
+            validator: (text) {
+              if (!isFree && (text == null || text.isEmpty)) {
+                return 'برجاء إدخال سعر التذكرة';
+              }
+              return null;
+            },
+            hintText: AppLocalizations.of(context)!.ticket_price,
+            style: Theme.of(context).brightness == Brightness.dark
+                ? AppStyle.white16Medium
+                : AppStyle.grey16Medium,
+            prefixIcon: Theme.of(context).brightness == Brightness.dark
+                ? Image.asset(AppImages.editDarkIcon)
+                : Image.asset(AppImages.editLightIcon),
+          ),
+          SizedBox(height: height * 0.02),
+        ],
+      );
 
   Widget buildDescriptionField(double height) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(AppLocalizations.of(context)!.description, style: Theme.of(context).brightness == Brightness.dark ? AppStyle.white14Bold : AppStyle.black16Bold),
-      SizedBox(height: height * 0.01),
-      CustomTextField(
-        controller: descriptionController,
-        validator: (text) => text == null || text.isEmpty ? AppLocalizations.of(context)!.please_enter_event_description : null,
-        maxLines: 4,
-        hintText: AppLocalizations.of(context)!.event_description,
-        style: Theme.of(context).brightness == Brightness.dark ? AppStyle.white16Medium : AppStyle.grey16Medium,
-        obscureText: false,
-      ),
-      SizedBox(height: height * 0.02),
-    ],
-  );
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(AppLocalizations.of(context)!.description,
+              style: Theme.of(context).brightness == Brightness.dark
+                  ? AppStyle.white14Bold
+                  : AppStyle.black16Bold),
+          SizedBox(height: height * 0.01),
+          CustomTextField(
+            controller: descriptionController,
+            validator: (text) => text == null || text.isEmpty
+                ? AppLocalizations.of(context)!.please_enter_event_description
+                : null,
+            maxLines: 4,
+            hintText: AppLocalizations.of(context)!.event_description,
+            style: Theme.of(context).brightness == Brightness.dark
+                ? AppStyle.white16Medium
+                : AppStyle.grey16Medium,
+            obscureText: false,
+          ),
+          SizedBox(height: height * 0.02),
+        ],
+      );
 
   Widget buildDatePicker(BuildContext context) => CustomDateOrTime(
-    imageDateOrTime: Theme.of(context).brightness == Brightness.dark ? AppImages.calndreDarkIcon : AppImages.calnderLightIcon,
-    chooseDateOrTime: selectedDate == null ? AppLocalizations.of(context)!.choose_date : DateFormat("dd/MM/yyyy").format(selectedDate!),
-    chooseDateOrTimeClicked: chooseDate,
-    textDateOrTime: AppLocalizations.of(context)!.event_date,
-  );
+        imageDateOrTime: Theme.of(context).brightness == Brightness.dark
+            ? AppImages.calndreDarkIcon
+            : AppImages.calnderLightIcon,
+        chooseDateOrTime: selectedDate == null
+            ? AppLocalizations.of(context)!.choose_date
+            : DateFormat("dd/MM/yyyy").format(selectedDate!),
+        chooseDateOrTimeClicked: chooseDate,
+        textDateOrTime: AppLocalizations.of(context)!.event_date,
+      );
 
   Widget buildTimePicker(BuildContext context) => CustomDateOrTime(
-    imageDateOrTime: Theme.of(context).brightness == Brightness.dark ? AppImages.clockDarkIcon : AppImages.clockLightIcon,
-    chooseDateOrTime: selectedTime == null ? AppLocalizations.of(context)!.choose_time : formatTime,
-    chooseDateOrTimeClicked: chooseTime,
-    textDateOrTime: AppLocalizations.of(context)!.event_time,
-  );
+        imageDateOrTime: Theme.of(context).brightness == Brightness.dark
+            ? AppImages.clockDarkIcon
+            : AppImages.clockLightIcon,
+        chooseDateOrTime: formatTime,
+        chooseDateOrTimeClicked: chooseTime,
+        textDateOrTime: AppLocalizations.of(context)!.event_time,
+      );
 
-  Widget buildLocationPicker(BuildContext context, double height, double width) => GestureDetector(
-    onTap: () async {
-      final location = await Navigator.push(context, MaterialPageRoute(builder: (context) => MapTab()));
-      if (location != null) {
+  Widget buildLocationPicker(
+          BuildContext context, double height, double width) =>
+      GestureDetector(
+        onTap: () async {
+          final location = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MapTab()),
+          );
+          if (location != null) {
+            getAddressFromLatLng(location);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColor.babyBlueColor, width: 2),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.location_on, color: AppColor.babyBlueColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  selectedAddress ??
+                      AppLocalizations.of(context)!.choose_event_location,
+                  style: AppStyle.blue16bold,
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 20, color: AppColor.babyBlueColor),
+            ],
+          ),
+        ),
+      );
+  void getAddressFromLatLng(LatLng location) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
         setState(() {
-          selectedLocation = location;
+          selectedLocation = '${location.latitude},${location.longitude}';
+          selectedAddress =
+              '${place.street}, ${place.locality}, ${place.country}';
         });
       }
-    },
-    child: Container(
-      padding: EdgeInsets.symmetric(horizontal: width * 0.02, vertical: height * 0.01),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColor.babyBlueColor, width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.02, vertical: height * 0.01),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: AppColor.babyBlueColor,
-            ),
-            child: Theme.of(context).brightness == Brightness.dark ? Image.asset(AppImages.locationDarkIcon) : Image.asset(AppImages.locationLightIcon),
-          ),
-          SizedBox(width: width * 0.04),
-          Text(selectedLocation ?? AppLocalizations.of(context)!.choose_event_location, style: AppStyle.blue16bold),
-          const Spacer(),
-          const Icon(Icons.arrow_forward_ios, size: 20, color: AppColor.babyBlueColor),
-        ],
-      ),
-    ),
-  );
+    } catch (e) {
+      print('Error getting address: $e');
+    }
+  }
 
   void editEvent() async {
     if (formKey.currentState?.validate() == true) {
+      log(widget.event.eventImage);
       Event updatedEvent = Event(
         id: widget.event.id, // لازم
         eventTitle: titleController.text,
         eventDescription: descriptionController.text,
-        eventImage: selectedImage ?? "",
+        eventImage:  widget.event.eventImage,
         eventName: selectedEvent ?? "",
         eventDate: selectedDate ?? DateTime.now(),
         eventTime: formatTime,
         eventLocation: selectedLocation ?? "",
-        availableTickets: 0, // أو الرقم اللي تحبيه
+        availableTickets: 0,
+        isFree: isFree,
+        ticketPrice: isFree
+            ? 0.0
+            : double.tryParse(ticketPriceController.text) ??
+                widget.event.ticketPrice, // أو الرقم اللي تحبيه
       );
-
-      await Provider.of<EventListProvider>(context, listen: false).editEvent(updatedEvent);
+      FirebaseUtls.updateEvent(widget.event.id, updatedEvent.toFireStore());
+      await Provider.of<EventListProvider>(context, listen: false)
+          .editEvent(updatedEvent);
 
       ToastHelper.showSuccessToast("تم تعديل الحدث بنجاح");
 
@@ -292,7 +458,8 @@ class _EditEventState extends State<EditEvent> {
   }
 
   chooseTime() async {
-    var chooseTime = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    var chooseTime =
+        await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (chooseTime != null) {
       setState(() {
         selectedTime = chooseTime;

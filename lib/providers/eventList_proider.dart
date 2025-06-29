@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:evently_app/firebase/event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -37,6 +38,27 @@ class EventListProvider extends ChangeNotifier {
     filtereventList = eventList;
     favoriteEventList = eventList.where((e) => e.isFavorite).toList();
     notifyListeners();
+  }
+  Future<List<Event>> getEventsFromFirestore() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection(Event.collectionName)
+          .get();
+
+      eventList = querySnapshot.docs
+          .map((doc) => Event.fromFireStore(doc.data()))
+          .toList();
+
+      filtereventList = eventList;
+      favoriteEventList =
+          eventList.where((event) => event.isFavorite).toList();
+
+      notifyListeners();
+      return eventList;
+    } catch (e) {
+      print('Error fetching events from Firestore: $e');
+      return [];
+    }
   }
 
   void addEvent(Event event) async {

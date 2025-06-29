@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:evently_app/UI/authentication/forget_password/forget_password_screen.dart';
 import 'package:evently_app/UI/authentication/login/login_screen.dart';
 import 'package:evently_app/UI/authentication/register/lregister_screen.dart';
@@ -57,7 +56,7 @@ class EventlyApp extends StatelessWidget {
     var themeProvider = Provider.of<AppThemeProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRouting.routeHome,
+      initialRoute: AppRouting.routeLogin,
       routes: {
         AppRouting.routeHome: (context) => const HomeScreen(),
         AppRouting.routeLogin:(context)=> const LoginScreen(),

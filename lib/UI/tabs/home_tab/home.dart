@@ -1,14 +1,15 @@
-import 'package:evently_app/UI/tabs/home_tab/home_widgets/eventCard.dart';
-import 'package:evently_app/UI/tabs/home_tab/home_widgets/tab_event_widget.dart';
-import 'package:evently_app/providers/eventList_proider.dart';
-import 'package:evently_app/utls/app_colo.dart';
-import 'package:evently_app/utls/app_images.dart';
-import 'package:evently_app/utls/app_style.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:evently_app/UI/tabs/edit_event/edit_event.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import '../../../firebase/event_model.dart';
+import '../../../firebase/firebaseUtls.dart';
+import '../../../providers/eventList_proider.dart';
+import '../../../utls/app_colo.dart';
+import '../../../utls/app_style.dart';
+import '../edit_event/edit_event.dart';
+import 'home_widgets/eventCard.dart';
+import 'home_widgets/tab_event_widget.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -18,20 +19,24 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  late Future<List<Event>> futureEvents;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    Provider.of<EventListProvider>(context, listen: false)
+        .getEventNameList(context);
+  }
+  @override
+  void initState() {
+    super.initState();
+    final eventProvider = Provider.of<EventListProvider>(context, listen: false);
+    futureEvents = eventProvider.getEventsFromFirestore();
+  }
   @override
   Widget build(BuildContext context) {
-    var eventListProvide = Provider.of<EventListProvider>(context);
-    eventListProvide.getEventNameList(context);
-    if (eventListProvide.eventList.isEmpty) {
-      eventListProvide.getAllEvents();
-    }
-
-    TextStyle textstyleDark = Theme.of(context).brightness == Brightness.dark
-        ? AppStyle.black16Bold
-        : AppStyle.blue16bold;
+    final eventProvider = Provider.of<EventListProvider>(context, listen: false);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
-
     Color appBarColor = Theme.of(context).brightness == Brightness.dark
         ? AppColor.primaryDark
         : AppColor.babyBlueColor;
@@ -47,14 +52,9 @@ class _HomeTabState extends State<HomeTab> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppLocalizations.of(context)!.welcome_back,
-                    style: AppStyle.white14Bold,
-                  ),
-                  Text(
-                    "Welcome Back!",
-                    style: AppStyle.white24Bold,
-                  ),
+                  Text(AppLocalizations.of(context)!.welcome_back,
+                      style: AppStyle.white14Bold),
+                  Text("Welcome Back!", style: AppStyle.white24Bold),
                 ],
               ),
             ],
@@ -76,39 +76,38 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   Row(
                     children: [
-                      //Image.asset(AppImages.map),
                       SizedBox(width: width * 0.02),
-                      Text(
-                        "Enjoy Your Events",
-                        style: AppStyle.white14Bold,
-                      ),
+                      Text("Enjoy Your Events", style: AppStyle.white14Bold),
                     ],
                   ),
                   SizedBox(height: height * 0.02),
                   DefaultTabController(
-                    length: eventListProvide.eventNameList.length,
+                    length: eventProvider.eventNameList.length,
                     child: TabBar(
                       onTap: (index) {
-                        eventListProvide.getSelectedIndex(index);
+                        setState(() {
+                          eventProvider.getSelectedIndex(index);
+                        });
                       },
                       tabAlignment: TabAlignment.start,
                       indicatorColor: AppColor.transparentColor,
                       dividerColor: AppColor.transparentColor,
-                      labelPadding:
-                      EdgeInsets.symmetric(horizontal: width * 0.01),
+                      labelPadding: EdgeInsets.symmetric(horizontal: width * 0.01),
                       isScrollable: true,
-                      tabs: eventListProvide.eventNameList.map((eventName) {
+                      tabs: eventProvider.eventNameList.map((eventName) {
+                        final isSelected =
+                            eventProvider.selectedIndex ==
+                                eventProvider.eventNameList.indexOf(eventName);
                         return TabEventWidget(
-                            styleEventDarkSelected: AppStyle.white16Medium,
-                            styleEventDarkUnSelected: AppStyle.white16Medium,
-                            styleEventLightSelected: AppStyle.blue16Medium,
-                            styleEventLightUnSelected: AppStyle.white16Medium,
-                            selectedEventDark: AppColor.babyBlueColor,
-                            selectedEventLight: AppColor.whiteColor,
-                            isSelected: eventListProvide.selectedIndex ==
-                                eventListProvide.eventNameList
-                                    .indexOf(eventName),
-                            eventName: eventName);
+                          isSelected: isSelected,
+                          eventName: eventName,
+                          selectedEventDark: AppColor.babyBlueColor,
+                          selectedEventLight: AppColor.whiteColor,
+                          styleEventDarkSelected: AppStyle.white16Medium,
+                          styleEventDarkUnSelected: AppStyle.white16Medium,
+                          styleEventLightSelected: AppStyle.blue16Medium,
+                          styleEventLightUnSelected: AppStyle.white16Medium,
+                        );
                       }).toList(),
                     ),
                   ),
@@ -116,30 +115,48 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final filteredEvents = eventListProvide.eventList;
-                  return filteredEvents.isEmpty
-                      ? Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.no_events_found,
-                          style: Theme.of(context).brightness ==
-                              Brightness.dark
-                              ? AppStyle.white16bold
-                              : AppStyle.black16Bold,
-                        ),
-                        const Icon(Icons.sentiment_dissatisfied,
-                            size: 40, color: AppColor.redColor),
-                      ],
-                    ),
-                  )
-                      : ListView.builder(
-                    itemCount: filteredEvents.length,
+              child: FutureBuilder<List<Event>>(
+                future: futureEvents,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  var events = snapshot.data ?? [];
+
+
+                  if (eventProvider.selectedIndex != 0) {
+                    final selectedType =
+                    eventProvider.eventNameList[eventProvider.selectedIndex];
+                    events = events.where((e) => e.eventName == selectedType).toList();
+                  }
+
+                  if (events.isEmpty) {
+                    return Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.no_events_found,
+                            style: Theme.of(context).brightness == Brightness.dark
+                                ? AppStyle.white16bold
+                                : AppStyle.black16Bold,
+                          ),
+                          const Icon(Icons.sentiment_dissatisfied,
+                              size: 40, color: AppColor.redColor),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: events.length,
                     itemBuilder: (context, index) {
-                      final event = filteredEvents[index];
+                      final event = events[index];
                       return GestureDetector(
                         onLongPress: () {
                           showModalBottomSheet(
@@ -148,30 +165,33 @@ class _HomeTabState extends State<HomeTab> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
-                                  leading: Icon(Icons.edit),
-                                  title: Text('تعديل'),
-
+                                  leading: const Icon(Icons.edit),
+                                  title: const Text('تعديل'),
                                   onTap: () async {
-                                    Navigator.pop(context); // يقفل الـ bottom sheet
-
+                                    Navigator.pop(context);
                                     final updatedEvent = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => EditEvent(event: event, index: index),
+                                        builder: (_) => EditEvent(
+                                          event: event,
+                                          index: index,
+                                        ),
                                       ),
                                     );
-
                                     if (updatedEvent != null) {
-                                      Provider.of<EventListProvider>(context, listen: false)
-                                          .updateEvent(index, updatedEvent);
+                                      eventProvider.updateEvent(index, updatedEvent);
                                     }
                                   },
                                 ),
                                 ListTile(
-                                  leading: Icon(Icons.delete),
-                                  title: Text('حذف'),
+                                  leading: const Icon(Icons.delete),
+                                  title: const Text('حذف'),
                                   onTap: () {
-                                    eventListProvide.deleteEvent(eventListProvide.eventList[index].id);
+                                    FirebaseUtls.deleteEvent(event.id);
+                                    eventProvider.deleteEvent(event.id);
+                                    setState(() {
+                                      futureEvents = eventProvider.getEventsFromFirestore(); // تحديث الـ Future
+                                    });
                                     Navigator.pop(context);
                                   },
                                 ),
@@ -180,24 +200,6 @@ class _HomeTabState extends State<HomeTab> {
                           );
                         },
                         child: EventCard(event: event),
-                        // child: ListTile(
-                        //   title: Text(event.eventTitle),
-                        //   subtitle: Text(event.eventLocation),
-                        //   trailing: IconButton(
-                        //     icon: Icon(
-                        //       event.isFavorite
-                        //           ? Icons.favorite
-                        //           : Icons.favorite_border,
-                        //       color: event.isFavorite
-                        //           ? Colors.red
-                        //           : Colors.grey,
-                        //     ),
-                        //     onPressed: () {
-                        //       eventListProvide
-                        //           .updateEventFavorite(event);
-                        //     },
-                        //   ),
-                        // ),
                       );
                     },
                   );

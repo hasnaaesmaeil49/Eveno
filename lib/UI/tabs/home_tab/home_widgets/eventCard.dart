@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:evently_app/firebase/event_model.dart';
 import 'package:evently_app/providers/eventList_proider.dart';
 import 'package:evently_app/utls/app_colo.dart';
@@ -11,7 +13,6 @@ import 'package:evently_app/UI/home/EventDetailPage.dart'; // تأكد من ال
 class EventCard extends StatelessWidget {
   EventCard({super.key, required this.event});
   Event event;
-
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
@@ -50,10 +51,8 @@ class EventCard extends StatelessWidget {
               width: 2,
             ),
             image: DecorationImage(
-              image: AssetImage(
-                imageDark,
-              ),
-              fit: BoxFit.fill,
+              image: _getImageProvider(event.eventImage),
+              fit: BoxFit.cover,
             ),
           ),
           child: Stack(
@@ -112,7 +111,8 @@ class EventCard extends StatelessWidget {
                         },
                         child: event.isFavorite
                             ? Icon(Icons.favorite, color: Colors.red, size: 30)
-                            : Icon(Icons.favorite_border, color: Colors.red, size: 30),
+                            : Icon(Icons.favorite_border,
+                                color: Colors.red, size: 30),
                       ),
                     ],
                   ),
@@ -123,5 +123,15 @@ class EventCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http') || path.startsWith('https')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('/data')) {
+      return FileImage(File(path));
+    } else {
+      return AssetImage(path);
+    }
   }
 }

@@ -24,22 +24,22 @@ Future<void> scheduleNotification({
 }) async {
   final scheduledDate = tz.TZDateTime.from(eventDate.subtract(const Duration(days: 2)), tz.local);
 
-  await flutterLocalNotificationsPlugin.zonedSchedule(
-    0,
-    title,
-    body,
-    scheduledDate,
-    const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'event_reminder_channel',
-        'Event Reminders',
-        importance: Importance.max,
-        priority: Priority.high,
-      ),
-    ),
-    androidAllowWhileIdle: true,
-    uiLocalNotificationDateInterpretation:
-    UILocalNotificationDateInterpretation.absoluteTime,
-    matchDateTimeComponents: DateTimeComponents.dateAndTime,
-  );
+  // await flutterLocalNotificationsPlugin.zonedSchedule(
+  //   0,
+  //   title,
+  //   body,
+  //   scheduledDate,
+  //   const NotificationDetails(
+  //     android: AndroidNotificationDetails(
+  //       'event_reminder_channel',
+  //       'Event Reminders',
+  //       importance: Importance.max,
+  //       priority: Priority.high,
+  //     ),
+  //   ),
+    // androidAllowWhileIdle: true,
+    // uiLocalNotificationDateInterpretation:
+    // UILocalNotificationDateInterpretation.absoluteTime,
+    // matchDateTimeComponents: DateTimeComponents.dateAndTime,
+  // );
 }

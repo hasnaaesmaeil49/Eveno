@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "956271417888-sj61i366mmt2u2mrs6qev8hmg8ofp0ob.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hasnaa.evently",
+            "certificate_hash": "262339dc5f776e84e905e609027bb0c17b7ab7da"
+          }
+        },
+        {
           "client_id": "956271417888-o6rko71k4fe7h40vs7jga3oes14m5tmv.apps.googleusercontent.com",
           "client_type": 3
         }

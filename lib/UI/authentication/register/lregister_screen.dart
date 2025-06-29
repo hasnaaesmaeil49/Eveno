@@ -1,3 +1,4 @@
+import 'package:evently_app/UI/authentication/login/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -5,10 +6,12 @@ import 'package:evently_app/utls/app_colo.dart';
 import 'package:evently_app/utls/app_images.dart';
 import 'package:evently_app/utls/app_routes.dart';
 import 'package:evently_app/utls/app_style.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_elevated_button.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_text_field.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:evently_app/UI/home/home_screen.dart'; // إضافة استدعاء الهوم اسكرين
+import 'package:evently_app/UI/home/home_screen.dart';
+import 'package:evently_app/UI/tabs/tabs_widgets/custom_elevated_button.dart';
+
+import '../../../dialog_utils.dart';
+import '../../tabs/tabs_widgets/custom_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,10 +21,13 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
@@ -35,96 +41,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return password.length >= 8 && RegExp(r'[A-Za-z]').hasMatch(password);
   }
 
-  Future<void> signUpWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+  Future<UserCredential> signInWithGoogle() async {
+   final googleSignIn = GoogleSignIn();
+    await googleSignIn.signOut();
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
 
-      // هنا التعديل: فتح الهوم وإزالة باقي الشاشات
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false,
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('فشل تسجيل الدخول باستخدام جوجل')),
-      );
-    }
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 
-  // ✅ تم تعديل هذه الدالة فقط
   Future<void> signUpWithEmailPassword() async {
-    final name = nameController.text.trim();
-    final email = emailController.text.trim();
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
-
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الاسم مطلوب!')),
-      );
-      return;
-    }
-
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('البريد الإلكتروني مطلوب!')),
-      );
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('البريد الإلكتروني غير صحيح!')),
-      );
-      return;
-    }
-
-    if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('كلمة السر مطلوبة!')),
-      );
-      return;
-    }
-
-    if (!isValidPassword(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('كلمة السر يجب أن تكون ٨ أحرف على الأقل وتحتوي على حرف!')),
-      );
-      return;
-    }
-
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('كلمة السر وتأكيدها غير متطابقين!')),
-      );
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     try {
+      DialogUtils.showLoading(context: context, message: 'loading');
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: emailController.text,
+        password: passwordController.text,
       );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إنشاء الحساب بنجاح!')),
-      );
-
-// الانتقال للهوم مباشرة
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false,
-      );
-
+      DialogUtils.hideLoading(context);
+      DialogUtils.showMessage(
+          context: context,
+          content: ' تم إنشاء الحساب بنجاح!',
+          posName: 'ok',
+          title: 'انشاء حساب',
+          posAction: () => Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              ));
     } on FirebaseAuthException catch (e) {
       String message = 'حدث خطأ، حاول مرة أخرى.';
       if (e.code == 'email-already-in-use') {
@@ -134,7 +88,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else if (e.code == 'weak-password') {
         message = 'كلمة السر ضعيفة جدًا!';
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      DialogUtils.hideLoading(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -149,13 +105,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     Color borderColor = Theme.of(context).brightness == Brightness.dark
         ? AppColor.babyBlueColor
         : AppColor.greyColor;
-
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -175,138 +129,188 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: width * 0.04, vertical: height * 0.02),
+        padding: EdgeInsets.symmetric(
+            horizontal: width * 0.04, vertical: height * 0.02),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.asset(AppImages.logo, height: height * 0.2),
-              SizedBox(height: height * 0.02),
-              CustomTextField(
-                controller: nameController,
-                style: Theme.of(context).brightness == Brightness.dark
-                    ? AppStyle.white16Medium
-                    : AppStyle.grey16Medium,
-                borderColor: borderColor,
-                hintText: AppLocalizations.of(context)!.name,
-                prefixIcon: Image.asset(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? AppImages.userIconDark
-                      : AppImages.userIconLight,
-                ),
-              ),
-              SizedBox(height: height * 0.02),
-              CustomTextField(
-                controller: emailController,
-                style: Theme.of(context).brightness == Brightness.dark
-                    ? AppStyle.white16Medium
-                    : AppStyle.grey16Medium,
-                borderColor: borderColor,
-                hintText: AppLocalizations.of(context)!.email,
-                prefixIcon: Image.asset(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? AppImages.emailIconDark
-                      : AppImages.emailIconLight,
-                ),
-              ),
-              SizedBox(height: height * 0.02),
-              CustomTextField(
-                controller: passwordController,
-                style: Theme.of(context).brightness == Brightness.dark
-                    ? AppStyle.white16Medium
-                    : AppStyle.grey16Medium,
-                borderColor: borderColor,
-                hintText: AppLocalizations.of(context)!.password,
-                prefixIcon: Image.asset(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? AppImages.passwordIconDark
-                      : AppImages.passwordIconLight,
-                ),
-                suffixIcon: InkWell(
-                  onTap: () => setState(() => obscurePassword = !obscurePassword),
-                  child: Icon(
-                    obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    color: AppColor.babyBlueColor,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Image.asset(AppImages.logo, height: height * 0.2),
+                SizedBox(height: height * 0.02),
+                CustomTextField(
+                    controller: nameController,
+                    style: Theme.of(context).brightness == Brightness.dark
+                        ? AppStyle.white16Medium
+                        : AppStyle.grey16Medium,
+                    borderColor: borderColor,
+                    hintText: AppLocalizations.of(context)!.name,
+                    prefixIcon: Image.asset(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? AppImages.userIconDark
+                          : AppImages.userIconLight,
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty ? 'الاسم مطلوب!' : null),
+                SizedBox(height: height * 0.02),
+                CustomTextField(
+                  controller: emailController,
+                  style: Theme.of(context).brightness == Brightness.dark
+                      ? AppStyle.white16Medium
+                      : AppStyle.grey16Medium,
+                  borderColor: borderColor,
+                  hintText: AppLocalizations.of(context)!.email,
+                  prefixIcon: Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? AppImages.emailIconDark
+                        : AppImages.emailIconLight,
                   ),
+                  validator: (value) => value!.isEmpty
+                      ? 'البريد الإلكتروني مطلوب!'
+                      : ((!isValidEmail(value))
+                          ? 'البريد الإلكتروني غير صحيح!'
+                          : null),
                 ),
-                obscureText: obscurePassword,
-              ),
-              SizedBox(height: height * 0.02),
-              CustomTextField(
-                controller: confirmPasswordController,
-                style: Theme.of(context).brightness == Brightness.dark
-                    ? AppStyle.white16Medium
-                    : AppStyle.grey16Medium,
-                borderColor: borderColor,
-                hintText: AppLocalizations.of(context)!.re_password,
-                prefixIcon: Image.asset(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? AppImages.passwordIconDark
-                      : AppImages.passwordIconLight,
-                ),
-                suffixIcon: InkWell(
-                  onTap: () => setState(() => obscureConfirmPassword = !obscureConfirmPassword),
-                  child: Icon(
-                    obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                    color: AppColor.babyBlueColor,
+                SizedBox(height: height * 0.02),
+                CustomTextField(
+                  controller: passwordController,
+                  style: Theme.of(context).brightness == Brightness.dark
+                      ? AppStyle.white16Medium
+                      : AppStyle.grey16Medium,
+                  borderColor: borderColor,
+                  hintText: AppLocalizations.of(context)!.password,
+                  prefixIcon: Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? AppImages.passwordIconDark
+                        : AppImages.passwordIconLight,
                   ),
+                  suffixIcon: InkWell(
+                    onTap: () =>
+                        setState(() => obscurePassword = !obscurePassword),
+                    child: Icon(
+                      obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: AppColor.babyBlueColor,
+                    ),
+                  ),
+                  obscureText: obscurePassword,
+                  validator: (value) => value!.isEmpty
+                      ? 'كلمة السر مطلوبة!'
+                      : (!isValidPassword(value) ? 'كلمة السر ضعيفة!' : null),
                 ),
-                obscureText: obscureConfirmPassword,
-              ),
-              SizedBox(height: height * 0.02),
-              CustomElevatedButton(
-                text: AppLocalizations.of(context)!.create_account,
-                textStyle: AppStyle.white20Medium,
-                onClickedButton: signUpWithEmailPassword,
-              ),
-              SizedBox(height: height * 0.02),
-              CustomElevatedButton(
-                text: 'إنشاء حساب باستخدام جوجل',
-                textStyle: AppStyle.white20Medium,
-                onClickedButton: signUpWithGoogle,
-              ),
-              SizedBox(height: height * 0.02),
-              InkWell(
-                onTap: () => Navigator.of(context).pushReplacementNamed(AppRouting.routeLogin),
-                child: Text.rich(
-                  textAlign: TextAlign.center,
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: AppLocalizations.of(context)!.already_have_account,
-                        style: Theme.of(context).brightness == Brightness.dark
-                            ? AppStyle.white16Medium
-                            : AppStyle.black16Medium,
-                      ),
-                      TextSpan(
-                        text: AppLocalizations.of(context)!.login,
-                        style: AppStyle.blue16Medium.copyWith(
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColor.babyBlueColor,
+                SizedBox(height: height * 0.02),
+                CustomTextField(
+                  controller: confirmPasswordController,
+                  style: Theme.of(context).brightness == Brightness.dark
+                      ? AppStyle.white16Medium
+                      : AppStyle.grey16Medium,
+                  borderColor: borderColor,
+                  hintText: AppLocalizations.of(context)!.re_password,
+                  prefixIcon: Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? AppImages.passwordIconDark
+                        : AppImages.passwordIconLight,
+                  ),
+                  suffixIcon: InkWell(
+                    onTap: () => setState(
+                        () => obscureConfirmPassword = !obscureConfirmPassword),
+                    child: Icon(
+                      obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppColor.babyBlueColor,
+                    ),
+                  ),
+                  obscureText: obscureConfirmPassword,
+                  validator: (value) => value != passwordController.text
+                      ? 'كلمة السر غير متطابقة!'
+                      : null,
+                ),
+                SizedBox(height: height * 0.02),
+                CustomElevatedButton(
+                  text: AppLocalizations.of(context)!.create_account,
+                  textStyle: AppStyle.white20Medium,
+                  onClickedButton: signUpWithEmailPassword,
+                ),
+                SizedBox(height: height * 0.02),
+                CustomElevatedButton(
+                  text: 'إنشاء حساب باستخدام جوجل',
+                  textStyle: AppStyle.white20Medium,
+                  onClickedButton: () async {
+                    try {
+                      DialogUtils.showLoading(context: context, message: 'جاري تسجيل الدخول...');
+                      final userCredential = await signInWithGoogle();
+                      DialogUtils.hideLoading(context);
+
+                      if (userCredential.user != null) {
+                        DialogUtils.showMessage(
+                          context: context,
+                          title: 'نجاح',
+                          content: 'تم تسجيل الدخول باستخدام جوجل بنجاح',
+                          posName: 'موافق',
+                          posAction: () {
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(builder: (_) => const HomeScreen()),
+                                  (route) => false,
+                            );
+                          },
+                        );
+                      }
+                    } catch (e) {
+                      DialogUtils.hideLoading(context);
+                      print('Google Sign-In Error: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('فشل تسجيل الدخول باستخدام جوجل')),
+                      );
+                    }
+                  },
+                ),
+                SizedBox(height: height * 0.02),
+                InkWell(
+                  onTap: () => Navigator.of(context)
+                      .pushReplacementNamed(AppRouting.routeLogin),
+                  child: Text.rich(
+                    textAlign: TextAlign.center,
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: AppLocalizations.of(context)!
+                              .already_have_account,
+                          style: Theme.of(context).brightness == Brightness.dark
+                              ? AppStyle.white16Medium
+                              : AppStyle.black16Medium,
                         ),
-                      ),
-                    ],
+                        TextSpan(
+                          text: AppLocalizations.of(context)!.login,
+                          style: AppStyle.blue16Medium.copyWith(
+                            decoration: TextDecoration.underline,
+                            decorationColor: AppColor.babyBlueColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: height * 0.02),
-              Center(
-                child: Container(
-                  width: width * 0.2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: AppColor.babyBlueColor, width: 2),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Image.asset(AppImages.americaIcon),
-                      Image.asset(AppImages.egyptIcon),
-                    ],
+                SizedBox(height: height * 0.02),
+                Center(
+                  child: Container(
+                    width: width * 0.2,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(50),
+                      border:
+                          Border.all(color: AppColor.babyBlueColor, width: 2),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.asset(AppImages.americaIcon),
+                        Image.asset(AppImages.egyptIcon),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

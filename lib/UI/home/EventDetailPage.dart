@@ -1,3 +1,6 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:geocoding/geocoding.dart';
@@ -10,6 +13,9 @@ import 'package:evently_app/utls/app_colo.dart';
 import 'package:evently_app/utls/app_style.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:evently_app/notifications/notification_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../BookingTickets/BookingScreen.dart';
 
 class EventDetailPage extends StatefulWidget {
   final Event event;
@@ -22,7 +28,8 @@ class EventDetailPage extends StatefulWidget {
 
 class _EventDetailPageState extends State<EventDetailPage> {
   LatLng? coordinates;
-
+  String? readableAddress;
+  int ticketQuantity = 1;
   @override
   void initState() {
     super.initState();
@@ -33,13 +40,26 @@ class _EventDetailPageState extends State<EventDetailPage> {
     try {
       List<Location> locations = await locationFromAddress(address);
       if (locations.isNotEmpty) {
+        final latLng =
+            LatLng(locations.first.latitude, locations.first.longitude);
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          latLng.latitude,
+          latLng.longitude,
+        );
+
         setState(() {
-          coordinates =
-              LatLng(locations.first.latitude, locations.first.longitude);
+          coordinates = latLng;
+          readableAddress = [
+            placemarks.first.street,
+            placemarks.first.subLocality,
+            placemarks.first.locality,
+            placemarks.first.administrativeArea,
+            placemarks.first.country,
+          ].where((e) => e != null && e.isNotEmpty).join(', ');
         });
       }
     } catch (e) {
-      print("خطأ في جلب الإحداثيات: $e");
+      print("خطأ في جلب الإحداثيات أو العنوان: $e");
     }
   }
 
@@ -82,8 +102,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
             const SizedBox(height: 12),
             buildInfoBlock(context,
                 icon: Icons.location_on,
-                label: 'المكان',
-                value: widget.event.eventLocation),
+                label: 'العنوان',
+                value: readableAddress ?? 'جاري تحديد العنوان...'),
             const SizedBox(height: 16),
             buildMapSection(),
             const SizedBox(height: 20),
@@ -96,23 +116,53 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
+  void openInGoogleMaps(LatLng location) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      print('Could not launch $url');
+    }
+  }
+
   Widget buildImageCard(double height) {
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColor.babyBlueColor, width: 1.5),
-      ),
-      elevation: 4,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          widget.event.eventImage,
-          width: double.infinity,
-          height: height * 0.25,
-          fit: BoxFit.cover,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColor.babyBlueColor, width: 1.5),
         ),
-      ),
-    );
+        elevation: 4,
+        child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+                height: height * 0.31,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: AppColor.babyBlueColor,
+                    width: 2,
+                  ),
+                  image: DecorationImage(
+                    image: _getImageProvider(widget.event.eventImage),
+                    fit: BoxFit.cover,
+                  ),
+                ))));
+  }
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http') || path.startsWith('https')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('/data')) {
+      return FileImage(File(path));
+    } else {
+      return AssetImage(path);
+    }
   }
 
   Widget buildTitleContainer() {
@@ -138,31 +188,51 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   Widget buildMapSection() {
     return coordinates != null
-        ? Container(
-            height: 200,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColor.babyBlueColor, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                    color: AppColor.babyBlueColor.withOpacity(0.1),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3)),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: GoogleMap(
-                initialCameraPosition:
-                    CameraPosition(target: coordinates!, zoom: 14),
-                markers: {
-                  Marker(
-                      markerId: MarkerId('eventLocation'),
-                      position: coordinates!),
-                },
-                zoomControlsEnabled: false,
+        ? Stack(
+            children: [
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColor.babyBlueColor, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColor.babyBlueColor.withOpacity(0.1),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: coordinates!,
+                      zoom: 14,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: MarkerId('eventLocation'),
+                        position: coordinates!,
+                      ),
+                    },
+                    zoomControlsEnabled: false,
+                    liteModeEnabled: true,
+                    myLocationButtonEnabled: false,
+                    onTap: (_) => openInGoogleMaps(coordinates!), // optional
+                  ),
+                ),
               ),
-            ),
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => openInGoogleMaps(coordinates!),
+                  ),
+                ),
+              ),
+            ],
           )
         : const Center(
             child: Padding(
@@ -197,7 +267,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
       ),
     );
   }
-
   Widget buildTicketsSection(EventListProvider eventProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,38 +276,108 @@ class _EventDetailPageState extends State<EventDetailPage> {
           style: AppStyle.blue16bold.copyWith(fontSize: 16),
         ),
         const SizedBox(height: 10),
-        if (widget.event.availableTickets > 0)
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColor.babyBlueColor,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove),
+              onPressed: () {
+                if (ticketQuantity > 1) {
+                  setState(() {
+                    ticketQuantity--;
+                  });
+                }
+              },
             ),
-            onPressed: () async {
-              int newAvailableTickets = widget.event.availableTickets - 1;
-              await FirebaseUtls.updateEvent(widget.event.id, {
-                'availableTickets': newAvailableTickets,
-              });
-              setState(() {
-                widget.event.availableTickets = newAvailableTickets;
-              });
-              eventProvider.updateEventById(widget.event);
-              await scheduleNotification(
-                title: 'تذكير بالفعالية',
-                body: 'متنساش عندك فعالية: ${widget.event.eventTitle} كمان يومين!',
-                eventDate: widget.event.eventDate,
-              );
-              Fluttertoast.showToast(msg: "✅ تم حجز التذكرة بنجاح");
-            },
-            child: Text("احجز الآن", style: AppStyle.white16bold),
-
+            Text('$ticketQuantity', style: AppStyle.black16Bold),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                if (ticketQuantity < widget.event.availableTickets) {
+                  setState(() {
+                    ticketQuantity++;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (widget.event.availableTickets > 0)
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.babyBlueColor,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                if (ticketQuantity <= widget.event.availableTickets) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookingScreen(
+                        event: widget.event,
+                        quantity: ticketQuantity,
+                      ),
+                    ),
+                  );
+                } else {
+                  Fluttertoast.showToast(msg: "الكمية المطلوبة غير متاحة");
+                }
+              },
+              child: Text("احجز الآن", style: AppStyle.white16bold),
+            ),
           )
         else
-          Text("لا توجد تذاكر متاحة", style: AppStyle.black16Medium.copyWith(color: AppColor.redColor)),
+          Text("لا توجد تذاكر متاحة",
+              style: AppStyle.black16Medium.copyWith(color: AppColor.redColor)),
       ],
     );
   }
+  // Widget buildTicketsSection(EventListProvider eventProvider) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(
+  //         '🎟 التذاكر المتاحة: ${widget.event.availableTickets}',
+  //         style: AppStyle.blue16bold.copyWith(fontSize: 16),
+  //       ),
+  //       const SizedBox(height: 10),
+  //       if (widget.event.availableTickets > 0)
+  //         ElevatedButton(
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: AppColor.babyBlueColor,
+  //             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+  //             shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(12)),
+  //           ),
+  //           onPressed: () async {
+  //             int newAvailableTickets = widget.event.availableTickets - 1;
+  //             await FirebaseUtls.updateEvent(widget.event.id, {
+  //               'availableTickets': newAvailableTickets,
+  //             });
+  //             setState(() {
+  //               widget.event.availableTickets = newAvailableTickets;
+  //             });
+  //             eventProvider.updateEventById(widget.event);
+  //             await scheduleNotification(
+  //               title: 'تذكير بالفعالية',
+  //               body:
+  //                   'متنساش عندك فعالية: ${widget.event.eventTitle} كمان يومين!',
+  //               eventDate: widget.event.eventDate,
+  //             );
+  //             Fluttertoast.showToast(msg: "✅ تم حجز التذكرة بنجاح");
+  //           },
+  //           child: Text("احجز الآن", style: AppStyle.white16bold),
+  //         )
+  //       else
+  //         Text("لا توجد تذاكر متاحة",
+  //             style: AppStyle.black16Medium.copyWith(color: AppColor.redColor)),
+  //     ],
+  //   );
+  // }
 
   Widget buildInfoBlock(BuildContext context,
       {required IconData icon, required String label, required String value}) {
