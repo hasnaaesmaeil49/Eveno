@@ -93,5 +93,19 @@
     "notification_scheduled": "سوف تتلقى تذكيرًا يوم قبل الحدث",
     "search_events": "بحث عن الفعاليات",
     "free_event": "حدث مجاني",
-    "ticket_price": "سعر التذكرة"
+    "ticket_price": "سعر التذكرة",
+    "my_events": "فعالياتي",
+    "no_booked_events": "لا يوجد فعاليات محجوزة بعد",
+    "date": "التاريخ",
+    "tickets": "التذاكر",
+    "searchEvents": "البحث عن الفعاليات",
+    "searchHint": "أدخل اسم الفعالية",
+    "close": "إغلاق",
+    "my_events": "أحداثي",
+    "no_booked_events": "لا يوجد أحداث محجوزة",
+    "confirm_delete": "تأكيد الحذف",
+    "are_you_sure_delete_event": "هل أنت متأكد من حذف الحدث؟",
+    "cancel": "إلغاء",
+    "yes":"نعم"
+
 }

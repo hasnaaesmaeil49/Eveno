@@ -1,4 +1,4 @@
-import 'package:evently_app/utls/app_style.dart';
+import 'package:Eveno/utls/app_style.dart';
 import 'package:flutter/material.dart';
 
 

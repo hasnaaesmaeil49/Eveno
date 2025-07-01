@@ -92,5 +92,19 @@
     "notification_scheduled": "You will receive a reminder one day beforetheevent",
     "search_events": "Search events",
     "free_event": "Free Event",
-    "ticket_price": "Ticket Price"
+    "ticket_price": "Ticket Price",
+    "my_events": "My Events",
+    "no_booked_events": "No booked events yet",
+    "date": "Date",
+    "tickets": "Tickets",
+    "searchEvents": "Search Events",
+    "searchHint": "Enter event name",
+    "close": "Close",
+    "my_events": "My Events",
+    "no_booked_events": "No booked events",
+    "confirm_delete": "Confirm Delete",
+    "are_you_sure_delete_event": "Are you sure you want to delete the event?",
+    "cancel": "Cancel",
+    "yes":"Yes"
+
 }

@@ -78,6 +78,7 @@
 //     };
 //   }
 // }
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
 
 part 'event_model.g.dart';
@@ -116,7 +117,7 @@ class Event extends HiveObject {
   @HiveField(10)
   final bool isFree;
   @HiveField(11)
-  double  ticketPrice;
+  double ticketPrice;
 
 
   static const String collectionName = 'Events';
@@ -137,21 +138,21 @@ class Event extends HiveObject {
   });
 
 
-
   Event.fromFireStore(Map<String, dynamic>? data)
       : this(
-      id: data!['id'] ??'',
-      eventTitle: data['title']??'',
-      eventDescription: data['description']??'',
-      eventImage: data['image']??'',
-      eventName: data['event_name']??'',
+      id: data!['id'] ?? '',
+      eventTitle: data['title'] ?? '',
+      eventDescription: data['description'] ?? '',
+      eventImage: data['image'] ?? '',
+      eventName: data['event_name'] ?? '',
       eventDate: DateTime.fromMillisecondsSinceEpoch(data['date']),
-      eventTime: data['time']??'',
-      eventLocation: data['location']??'',
-      isFavorite: data['is_favorite']??'',
-      availableTickets: data['available_tickets'] ?? 0, // ✅ هنا
+      eventTime: data['time'] ?? '',
+      eventLocation: data['location'] ?? '',
+      isFavorite: data['is_favorite'] ?? '',
+      availableTickets: data['available_tickets'] ?? 0,
+      // ✅ هنا
       isFree: data['isFree'] ?? true,
-      ticketPrice: data['ticketPrice']??''
+      ticketPrice: data['ticketPrice'] ?? ''
   );
 
   Map<String, dynamic> toFireStore() {
@@ -169,5 +170,38 @@ class Event extends HiveObject {
       'isFree': isFree,
       'ticketPrice': ticketPrice,
     };
+  }
+
+  // ... الحقول التانية
+
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'eventTitle': eventTitle,
+      'eventDate': eventDate,
+      // ... أضيفي الحقول التانية
+    };
+  }
+
+  factory Event.fromMap(Map<String, dynamic> map) {
+    return Event(
+      id: map['id'],
+      eventTitle: map['eventTitle'],
+      eventDate: (map['eventDate'] as Timestamp).toDate(),
+        eventDescription: map['description'] ?? '',
+        eventImage: map['image'] ?? '',
+        eventName: map['event_name'] ?? '',
+        eventTime: map['time'] ?? '',
+        eventLocation: map['location'] ?? '',
+        isFavorite: map['is_favorite'] ?? '',
+        availableTickets: map['available_tickets'] ,
+        // ✅ هنا
+        isFree: map['isFree'] ,
+        ticketPrice: map['ticketPrice'] ?? ''
+
+
+      // ... أضيفي التحويلات التانية
+    );
   }
 }

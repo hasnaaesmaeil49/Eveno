@@ -1,11 +1,11 @@
-import 'package:evently_app/UI/tabs/home_tab/home_widgets/eventCard.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_text_field.dart';
-import 'package:evently_app/firebase/event_model.dart';
-import 'package:evently_app/providers/eventList_proider.dart';
-import 'package:evently_app/utls/app_colo.dart';
-import 'package:evently_app/utls/app_style.dart';
+import 'package:Eveno/UI/tabs/home_tab/home_widgets/eventCard.dart';
+import 'package:Eveno/UI/tabs/tabs_widgets/custom_text_field.dart';
+import 'package:Eveno/firebase/event_model.dart';
+import 'package:Eveno/providers/eventList_proider.dart';
+import 'package:Eveno/utls/app_colo.dart';
+import 'package:Eveno/utls/app_style.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class favoriteTab extends StatelessWidget {

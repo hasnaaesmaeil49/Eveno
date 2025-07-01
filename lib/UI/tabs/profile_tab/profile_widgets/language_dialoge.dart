@@ -1,8 +1,8 @@
-import 'package:evently_app/providers/app_language_provider.dart';
-import 'package:evently_app/utls/app_colo.dart';
-import 'package:evently_app/utls/app_style.dart';
+import 'package:Eveno/providers/app_language_provider.dart';
+import 'package:Eveno/utls/app_colo.dart';
+import 'package:Eveno/utls/app_style.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 class LanguageDialoge extends StatefulWidget {
   const LanguageDialoge({super.key});

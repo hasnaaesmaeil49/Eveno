@@ -1,7 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
+import 'package:Eveno/l10n/app_localizations.dart';
 import '../../../firebase/event_model.dart';
 import '../../../firebase/firebaseUtls.dart';
 import '../../../providers/eventList_proider.dart';
@@ -15,26 +15,37 @@ class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
   @override
-  State<HomeTab> createState() => _HomeTabState();
+  State<HomeTab> createState() => HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class HomeTabState extends State<HomeTab> {
   late Future<List<Event>> futureEvents;
+  String searchQuery = '';
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     Provider.of<EventListProvider>(context, listen: false)
         .getEventNameList(context);
   }
+
   @override
   void initState() {
     super.initState();
     final eventProvider = Provider.of<EventListProvider>(context, listen: false);
     futureEvents = eventProvider.getEventsFromFirestore();
+    eventProvider.getFavoriteEvent(); // تحميل الأحداث المفضلة
   }
+
+  void applySearchFilter(String query) {
+    setState(() {
+      searchQuery = query;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final eventProvider = Provider.of<EventListProvider>(context, listen: false);
+    final eventProvider = Provider.of<EventListProvider>(context);
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
     Color appBarColor = Theme.of(context).brightness == Brightness.dark
@@ -128,7 +139,16 @@ class _HomeTabState extends State<HomeTab> {
 
                   var events = snapshot.data ?? [];
 
+                  // Apply search filter if searchQuery is not empty
+                  if (searchQuery.isNotEmpty) {
+                    events = events
+                        .where((event) => event.eventTitle
+                        .toLowerCase()
+                        .contains(searchQuery.toLowerCase()))
+                        .toList();
+                  }
 
+                  // Apply event type filter
                   if (eventProvider.selectedIndex != 0) {
                     final selectedType =
                     eventProvider.eventNameList[eventProvider.selectedIndex];
@@ -190,16 +210,37 @@ class _HomeTabState extends State<HomeTab> {
                                     FirebaseUtls.deleteEvent(event.id);
                                     eventProvider.deleteEvent(event.id);
                                     setState(() {
-                                      futureEvents = eventProvider.getEventsFromFirestore(); // تحديث الـ Future
+                                      futureEvents = eventProvider.getEventsFromFirestore();
                                     });
                                     Navigator.pop(context);
                                   },
                                 ),
+                                //  ListTile(
+                                //   title: Text(event.eventTitle),
+                                //   subtitle: Text(event.eventLocation),
+                                //   trailing: IconButton(
+                                //     icon: Icon(
+                                //       event.isFavorite
+                                //           ? Icons.favorite
+                                //           : Icons.favorite_border,
+                                //       color: event.isFavorite
+                                //           ? Colors.red
+                                //           : Colors.grey,
+                                //     ),
+                                //     onPressed: () {
+                                //       Provider.of<EventListProvider>(context, listen: false).updateEventFavorite(event);
+                                //     },
+                                //   ),
+                                // ),
                               ],
                             ),
                           );
                         },
-                        child: EventCard(event: event),
+
+                        child: EventCard(
+                          event: event,
+                        ),
+
                       );
                     },
                   );

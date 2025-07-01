@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
-import '../UI/tabs/tabs_widgets/custom_elevated_button.dart';
-import '../firebase/event_model.dart';
-import '../utls/app_colo.dart';
-import '../utls/app_images.dart';
-import '../utls/app_style.dart';
-import 'PaymentScreen.dart';
-
+import 'package:provider/provider.dart'; // لاستخدام Provider
+import 'package:Eveno/providers/eventList_proider.dart'; // لإضافة الإيفينت لـ My Events
+import 'package:Eveno/UI/tabs/tabs_widgets/custom_elevated_button.dart';
+import 'package:Eveno/firebase/event_model.dart';
+import 'package:Eveno/utls/app_colo.dart';
+import 'package:Eveno/utls/app_images.dart';
+import 'package:Eveno/utls/app_style.dart';
+import 'package:Eveno/UI/home/Home_screen.dart'; // استيراد Home Screen
+import 'package:Eveno/BookingTickets/PaymentScreen.dart';
 
 class BookingScreen extends StatefulWidget {
   final Event event;
@@ -31,6 +33,37 @@ class _BookingScreenState extends State<BookingScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _onConfirmBooking(BuildContext context) {
+    if (_formKey.currentState!.validate()) {
+      final eventProvider = Provider.of<EventListProvider>(context, listen: false);
+      if (widget.event.isFree) {
+        // إذا كان الإيفينت مجاني
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.booking_confirmed)),
+        );
+        eventProvider.addMyEvent(widget.event); // إضافة لـ My Events
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        // إذا كان الإيفينت مدفوع
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentScreen(
+              event: widget.event,
+              quantity: widget.quantity,
+              name: _nameController.text,
+              email: _emailController.text,
+              phone: _phoneController.text,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -60,24 +93,24 @@ class _BookingScreenState extends State<BookingScreen> {
                   borderRadius: BorderRadius.circular(16),
                   child: widget.event.eventImage.isNotEmpty
                       ? Image.network(
-                          widget.event.eventImage,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(
-                            AppImages.intro2ImageLight,
-                            height: 150,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Image.asset(
+                    widget.event.eventImage,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Image.asset(
                           AppImages.intro2ImageLight,
                           height: 150,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),
+                  )
+                      : Image.asset(
+                    AppImages.intro2ImageLight,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // تفاصيل الإيفينت
@@ -104,7 +137,7 @@ class _BookingScreenState extends State<BookingScreen> {
                   style: AppStyle.grey16Medium,
                 ),
                 Text(
-                  'Total: ${(widget.event.availableTickets > 0 ? widget.quantity * 10 : 0)} EGP', // سعر افتراضي 10 EGP لكل تذكرة
+                  'Total: ${(widget.event.isFree ? 0 : widget.quantity * widget.event.ticketPrice)} EGP',
                   style: AppStyle.blue16bold,
                 ),
                 const SizedBox(height: 24),
@@ -171,28 +204,12 @@ class _BookingScreenState extends State<BookingScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                // زر المتابعة (بدل الدفع، هيروح لصفحة دفع منفصلة لاحقًا)
+                // زر المتابعة
                 Center(
                   child: CustomElevatedButton(
                     text: AppLocalizations.of(context)!.confirm_booking,
-                    // غيرت النص لتأكيد الحجز
                     textStyle: AppStyle.white16bold,
-                    onClickedButton: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PaymentScreen(
-                              event: widget.event,
-                              quantity: widget.quantity,
-                              name: _nameController.text,
-                              email: _emailController.text,
-                              phone: _phoneController.text,
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                    onClickedButton: () => _onConfirmBooking(context),
                   ),
                 ),
               ],

@@ -1,24 +1,22 @@
-import 'package:evently_app/UI/authentication/forget_password/forget_password_screen.dart';
-import 'package:evently_app/UI/authentication/login/login_screen.dart';
-import 'package:evently_app/UI/authentication/register/lregister_screen.dart';
-import 'package:evently_app/UI/home/home_screen.dart';
-import 'package:evently_app/UI/tabs/add_event/add_event.dart';
-import 'package:evently_app/firebase_options.dart';
-import 'package:evently_app/providers/app_language_provider.dart';
-import 'package:evently_app/providers/app_theme_provider.dart';
-import 'package:evently_app/providers/eventList_proider.dart';
-import 'package:evently_app/utls/app_routes.dart';
-import 'package:evently_app/utls/app_theme.dart';
+import 'package:Eveno/UI/authentication/forget_password/forget_password_screen.dart';
+import 'package:Eveno/UI/authentication/login/login_screen.dart';
+import 'package:Eveno/UI/authentication/register/lregister_screen.dart';
+import 'package:Eveno/UI/home/home_screen.dart';
+import 'package:Eveno/UI/tabs/add_event/add_event.dart';
+import 'package:Eveno/firebase_options.dart';
+import 'package:Eveno/providers/app_language_provider.dart';
+import 'package:Eveno/providers/app_theme_provider.dart';
+import 'package:Eveno/providers/eventList_proider.dart';
+import 'package:Eveno/utls/app_routes.dart';
+import 'package:Eveno/utls/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:evently_app/firebase/event_model.dart';
-import 'package:evently_app/notifications/notification_helper.dart';
-
-
+import 'package:Eveno/firebase/event_model.dart';
+import 'package:Eveno/notifications/notification_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

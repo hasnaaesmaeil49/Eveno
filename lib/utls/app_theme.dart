@@ -1,4 +1,4 @@
-import 'package:evently_app/utls/app_colo.dart';
+import 'package:Eveno/utls/app_colo.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme{

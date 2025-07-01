@@ -1,26 +1,26 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:evently_app/UI/tabs/add_event/add_event_widgets/custom_date_or_time.dart';
-import 'package:evently_app/UI/tabs/home_tab/home_widgets/tab_event_widget.dart';
-import 'package:evently_app/UI/tabs/map_tab/map.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_elevated_button.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_text_field.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/toast.dart';
-import 'package:evently_app/firebase/event_model.dart';
-import 'package:evently_app/firebase/firebaseUtls.dart';
-import 'package:evently_app/providers/eventList_proider.dart';
-import 'package:evently_app/utls/app_colo.dart';
-import 'package:evently_app/utls/app_images.dart';
-import 'package:evently_app/utls/app_style.dart';
+import 'package:Eveno/UI/tabs/add_event/add_event_widgets/custom_date_or_time.dart';
+import 'package:Eveno/UI/tabs/home_tab/home_widgets/tab_event_widget.dart';
+import 'package:Eveno/UI/tabs/map_tab/map.dart';
+import 'package:Eveno/UI/tabs/tabs_widgets/custom_elevated_button.dart';
+import 'package:Eveno/UI/tabs/tabs_widgets/custom_text_field.dart';
+import 'package:Eveno/UI/tabs/tabs_widgets/toast.dart';
+import 'package:Eveno/firebase/event_model.dart';
+import 'package:Eveno/firebase/firebaseUtls.dart';
+import 'package:Eveno/providers/eventList_proider.dart';
+import 'package:Eveno/utls/app_colo.dart';
+import 'package:Eveno/utls/app_images.dart';
+import 'package:Eveno/utls/app_style.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:evently_app/UI/home/home_screen.dart';
-import 'package:evently_app/UI/tabs/edit_event/edit_event.dart';
+import 'package:Eveno/UI/home/home_screen.dart';
+import 'package:Eveno/UI/tabs/edit_event/edit_event.dart';
 
 class EditEvent extends StatefulWidget {
   final Event event;

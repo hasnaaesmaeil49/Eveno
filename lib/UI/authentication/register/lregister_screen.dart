@@ -1,14 +1,14 @@
-import 'package:evently_app/UI/authentication/login/login_screen.dart';
+import 'package:Eveno/UI/authentication/login/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:evently_app/utls/app_colo.dart';
-import 'package:evently_app/utls/app_images.dart';
-import 'package:evently_app/utls/app_routes.dart';
-import 'package:evently_app/utls/app_style.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:evently_app/UI/home/home_screen.dart';
-import 'package:evently_app/UI/tabs/tabs_widgets/custom_elevated_button.dart';
+import 'package:Eveno/utls/app_colo.dart';
+import 'package:Eveno/utls/app_images.dart';
+import 'package:Eveno/utls/app_routes.dart';
+import 'package:Eveno/utls/app_style.dart';
+import 'package:Eveno/l10n/app_localizations.dart';
+import 'package:Eveno/UI/home/home_screen.dart';
+import 'package:Eveno/UI/tabs/tabs_widgets/custom_elevated_button.dart';
 
 import '../../../dialog_utils.dart';
 import '../../tabs/tabs_widgets/custom_text_field.dart';
