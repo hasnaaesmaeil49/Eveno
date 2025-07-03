@@ -29,10 +29,10 @@ class EditEvent extends StatefulWidget {
   const EditEvent({super.key, required this.event, required this.index});
 
   @override
-  State<EditEvent> createState() => _EditEventState();
+  State<EditEvent> createState() => _Editeventstate();
 }
 
-class _EditEventState extends State<EditEvent> {
+class _Editeventstate extends State<EditEvent> {
   int selectedIndex = 0;
   final formKey = GlobalKey<FormState>();
   DateTime? selectedDate;
@@ -41,6 +41,7 @@ class _EditEventState extends State<EditEvent> {
   var titleController = TextEditingController();
   var descriptionController = TextEditingController();
   var ticketPriceController = TextEditingController();
+  var availableTicketsController = TextEditingController(); // إضافة حقل جديد
   String? selectedImage;
   String? selectedEvent;
   String? selectedLocation;
@@ -64,6 +65,7 @@ class _EditEventState extends State<EditEvent> {
       selectedLocation = widget.event.eventLocation;
       isFree = widget.event.isFree;
       ticketPriceController.text = widget.event.ticketPrice.toStringAsFixed(2);
+      availableTicketsController.text = widget.event.availableTickets.toString(); // إضافة القيمة الافتراضية
       selectedEvent = widget.event.eventName;
       selectedImage = widget.event.eventImage;
     }
@@ -83,7 +85,6 @@ class _EditEventState extends State<EditEvent> {
   Widget build(BuildContext context) {
     eventProvider = Provider.of<EventListProvider>(context);
 
-    /// ✅ لازم نجهزهم هنا عشان نستخدمهم في initState كمان
     eventsNameList = [
       AppLocalizations.of(context)!.sport,
       AppLocalizations.of(context)!.birthday,
@@ -125,7 +126,6 @@ class _EditEventState extends State<EditEvent> {
           : AppImages.eatingImgLight,
     ];
 
-    /// ✅ لو مفيش بيانات event موجودة - نعرض رسالة محترمة بدل crash
     if (widget.event == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('حدث خطأ')),
@@ -134,10 +134,7 @@ class _EditEventState extends State<EditEvent> {
     }
 
     selectedIndex = eventsNameList.indexOf(widget.event.eventName);
-    // selectedImage = eventImageList[selectedIndex];
-    // selectedEvent = eventsNameList[selectedIndex];
 
-    // ✅ باقي كودك بدون أي تعديل
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
@@ -230,13 +227,17 @@ class _EditEventState extends State<EditEvent> {
                             style: AppStyle.blue16Medium),
                       ],
                     ),
-                    // إضافة TextField لـ ticketPrice
+                    // TextField لـ ticketPrice
                     if (!isFree)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: buildTicketPriceField(height),
                       ),
-
+                    // TextField لـ availableTickets
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: buildAvailableTicketsField(height), // حقل جديد
+                    ),
                     buildLocationPicker(context, height, width),
                     SizedBox(height: 10),
                     CustomElevatedButton(
@@ -265,103 +266,133 @@ class _EditEventState extends State<EditEvent> {
   }
 
   Widget buildTitleField(double height) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context)!.title,
-              style: Theme.of(context).brightness == Brightness.dark
-                  ? AppStyle.white16bold
-                  : AppStyle.black16Bold),
-          SizedBox(height: height * 0.01),
-          CustomTextField(
-            controller: titleController,
-            validator: (text) => text == null || text.isEmpty
-                ? AppLocalizations.of(context)!.please_enter_event_title
-                : null,
-            hintText: AppLocalizations.of(context)!.event_title,
-            style: Theme.of(context).brightness == Brightness.dark
-                ? AppStyle.white16Medium
-                : AppStyle.grey16Medium,
-            prefixIcon: Theme.of(context).brightness == Brightness.dark
-                ? Image.asset(AppImages.editDarkIcon)
-                : Image.asset(AppImages.editLightIcon),
-          ),
-          SizedBox(height: height * 0.02),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(AppLocalizations.of(context)!.title,
+          style: Theme.of(context).brightness == Brightness.dark
+              ? AppStyle.white16bold
+              : AppStyle.black16Bold),
+      SizedBox(height: height * 0.01),
+      CustomTextField(
+        controller: titleController,
+        validator: (text) => text == null || text.isEmpty
+            ? AppLocalizations.of(context)!.please_enter_event_title
+            : null,
+        hintText: AppLocalizations.of(context)!.event_title,
+        style: Theme.of(context).brightness == Brightness.dark
+            ? AppStyle.white16Medium
+            : AppStyle.grey16Medium,
+        prefixIcon: Theme.of(context).brightness == Brightness.dark
+            ? Image.asset(AppImages.editDarkIcon)
+            : Image.asset(AppImages.editLightIcon),
+      ),
+      SizedBox(height: height * 0.02),
+    ],
+  );
+
   Widget buildTicketPriceField(double height) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context)!.ticket_price,
-              style: Theme.of(context).brightness == Brightness.dark
-                  ? AppStyle.white16bold
-                  : AppStyle.black16Bold),
-          SizedBox(height: height * 0.01),
-          CustomTextField(
-            controller: ticketPriceController,
-            validator: (text) {
-              if (!isFree && (text == null || text.isEmpty)) {
-                return 'برجاء إدخال سعر التذكرة';
-              }
-              return null;
-            },
-            hintText: AppLocalizations.of(context)!.ticket_price,
-            style: Theme.of(context).brightness == Brightness.dark
-                ? AppStyle.white16Medium
-                : AppStyle.grey16Medium,
-            prefixIcon: Theme.of(context).brightness == Brightness.dark
-                ? Image.asset(AppImages.editDarkIcon)
-                : Image.asset(AppImages.editLightIcon),
-          ),
-          SizedBox(height: height * 0.02),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(AppLocalizations.of(context)!.ticket_price,
+          style: Theme.of(context).brightness == Brightness.dark
+              ? AppStyle.white16bold
+              : AppStyle.black16Bold),
+      SizedBox(height: height * 0.01),
+      CustomTextField(
+        controller: ticketPriceController,
+        validator: (text) {
+          if (!isFree && (text == null || text.isEmpty)) {
+            return 'برجاء إدخال سعر التذكرة';
+          }
+          return null;
+        },
+        hintText: AppLocalizations.of(context)!.ticket_price,
+        style: Theme.of(context).brightness == Brightness.dark
+            ? AppStyle.white16Medium
+            : AppStyle.grey16Medium,
+        prefixIcon: Theme.of(context).brightness == Brightness.dark
+            ? Image.asset(AppImages.editDarkIcon)
+            : Image.asset(AppImages.editLightIcon),
+      ),
+      SizedBox(height: height * 0.02),
+    ],
+  );
+
+  Widget buildAvailableTicketsField(double height) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(AppLocalizations.of(context)!.available_tickets,
+          style: Theme.of(context).brightness == Brightness.dark
+              ? AppStyle.white16bold
+              : AppStyle.black16Bold),
+      SizedBox(height: height * 0.01),
+      CustomTextField(
+        controller: availableTicketsController,
+        validator: (text) {
+          if (text == null || text.isEmpty) {
+            return 'برجاء إدخال عدد التذاكر المتاحة';
+          }
+          return null;
+        },
+        hintText: AppLocalizations.of(context)!.available_tickets,
+        style: Theme.of(context).brightness == Brightness.dark
+            ? AppStyle.white16Medium
+            : AppStyle.grey16Medium,
+        prefixIcon: Theme.of(context).brightness == Brightness.dark
+            ? Image.asset(AppImages.editDarkIcon)
+            : Image.asset(AppImages.editLightIcon),
+        keyboardType: TextInputType.number, // لضمان إدخال الأرقام فقط
+      ),
+      SizedBox(height: height * 0.02),
+    ],
+  );
 
   Widget buildDescriptionField(double height) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context)!.description,
-              style: Theme.of(context).brightness == Brightness.dark
-                  ? AppStyle.white14Bold
-                  : AppStyle.black16Bold),
-          SizedBox(height: height * 0.01),
-          CustomTextField(
-            controller: descriptionController,
-            validator: (text) => text == null || text.isEmpty
-                ? AppLocalizations.of(context)!.please_enter_event_description
-                : null,
-            maxLines: 4,
-            hintText: AppLocalizations.of(context)!.event_description,
-            style: Theme.of(context).brightness == Brightness.dark
-                ? AppStyle.white16Medium
-                : AppStyle.grey16Medium,
-            obscureText: false,
-          ),
-          SizedBox(height: height * 0.02),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(AppLocalizations.of(context)!.description,
+          style: Theme.of(context).brightness == Brightness.dark
+              ? AppStyle.white14Bold
+              : AppStyle.black16Bold),
+      SizedBox(height: height * 0.01),
+      CustomTextField(
+        controller: descriptionController,
+        validator: (text) => text == null || text.isEmpty
+            ? AppLocalizations.of(context)!.please_enter_event_description
+            : null,
+        maxLines: 4,
+        hintText: AppLocalizations.of(context)!.event_description,
+        style: Theme.of(context).brightness == Brightness.dark
+            ? AppStyle.white16Medium
+            : AppStyle.grey16Medium,
+        obscureText: false,
+      ),
+      SizedBox(height: height * 0.02),
+    ],
+  );
 
   Widget buildDatePicker(BuildContext context) => CustomDateOrTime(
-        imageDateOrTime: Theme.of(context).brightness == Brightness.dark
-            ? AppImages.calndreDarkIcon
-            : AppImages.calnderLightIcon,
-        chooseDateOrTime: selectedDate == null
-            ? AppLocalizations.of(context)!.choose_date
-            : DateFormat("dd/MM/yyyy").format(selectedDate!),
-        chooseDateOrTimeClicked: chooseDate,
-        textDateOrTime: AppLocalizations.of(context)!.event_date,
-      );
+    imageDateOrTime: Theme.of(context).brightness == Brightness.dark
+        ? AppImages.calndreDarkIcon
+        : AppImages.calnderLightIcon,
+    chooseDateOrTime: selectedDate == null
+        ? AppLocalizations.of(context)!.choose_date
+        : DateFormat("dd/MM/yyyy").format(selectedDate!),
+    chooseDateOrTimeClicked: chooseDate,
+    textDateOrTime: AppLocalizations.of(context)!.event_date,
+  );
 
   Widget buildTimePicker(BuildContext context) => CustomDateOrTime(
-        imageDateOrTime: Theme.of(context).brightness == Brightness.dark
-            ? AppImages.clockDarkIcon
-            : AppImages.clockLightIcon,
-        chooseDateOrTime: formatTime,
-        chooseDateOrTimeClicked: chooseTime,
-        textDateOrTime: AppLocalizations.of(context)!.event_time,
-      );
+    imageDateOrTime: Theme.of(context).brightness == Brightness.dark
+        ? AppImages.clockDarkIcon
+        : AppImages.clockLightIcon,
+    chooseDateOrTime: formatTime,
+    chooseDateOrTimeClicked: chooseTime,
+    textDateOrTime: AppLocalizations.of(context)!.event_time,
+  );
 
   Widget buildLocationPicker(
-          BuildContext context, double height, double width) =>
+      BuildContext context, double height, double width) =>
       GestureDetector(
         onTap: () async {
           final location = await Navigator.push(
@@ -395,6 +426,7 @@ class _EditEventState extends State<EditEvent> {
           ),
         ),
       );
+
   void getAddressFromLatLng(LatLng location) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -406,7 +438,7 @@ class _EditEventState extends State<EditEvent> {
         setState(() {
           selectedLocation = '${location.latitude},${location.longitude}';
           selectedAddress =
-              '${place.street}, ${place.locality}, ${place.country}';
+          '${place.street}, ${place.locality}, ${place.country}';
         });
       }
     } catch (e) {
@@ -418,20 +450,21 @@ class _EditEventState extends State<EditEvent> {
     if (formKey.currentState?.validate() == true) {
       log(widget.event.eventImage);
       Event updatedEvent = Event(
-        id: widget.event.id, // لازم
+        id: widget.event.id,
         eventTitle: titleController.text,
         eventDescription: descriptionController.text,
-        eventImage:  widget.event.eventImage,
+        eventImage: widget.event.eventImage,
         eventName: selectedEvent ?? "",
         eventDate: selectedDate ?? DateTime.now(),
         eventTime: formatTime,
         eventLocation: selectedLocation ?? "",
-        availableTickets: 0,
+        availableTickets: int.tryParse(availableTicketsController.text) ??
+            widget.event.availableTickets, // تحديث عدد التذاكر
         isFree: isFree,
         ticketPrice: isFree
             ? 0.0
             : double.tryParse(ticketPriceController.text) ??
-                widget.event.ticketPrice, // أو الرقم اللي تحبيه
+            widget.event.ticketPrice,
       );
       FirebaseUtls.updateEvent(widget.event.id, updatedEvent.toFireStore());
       await Provider.of<EventListProvider>(context, listen: false)
@@ -459,7 +492,7 @@ class _EditEventState extends State<EditEvent> {
 
   chooseTime() async {
     var chooseTime =
-        await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (chooseTime != null) {
       setState(() {
         selectedTime = chooseTime;

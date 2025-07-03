@@ -25,7 +25,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lets_start => 'Let’s Start';
 
   @override
-  String get find_events_inspire => 'Find Events That Inspire You';
+  String get find_events_inspire => 'Find events That Inspire You';
 
   @override
   String get dive_into_events =>
@@ -206,10 +206,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get please_enter_event_description => 'Please Enter Event Description';
 
   @override
-  String get no_favorite_events_found => 'Opps! No Favorite Events Found';
+  String get no_favorite_events_found => 'Opps! No Favorite events Found';
 
   @override
-  String get no_events_found => 'Opps! No Events Found';
+  String get no_events_found => 'Opps! No events Found';
 
   @override
   String get other => 'other';
@@ -297,7 +297,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticket_price => 'Ticket Price';
 
   @override
-  String get my_events => 'My Events';
+  String get my_events => 'My events';
 
   @override
   String get no_booked_events => 'No booked events';
@@ -309,7 +309,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tickets => 'Tickets';
 
   @override
-  String get searchEvents => 'Search Events';
+  String get searchevents => 'Search events';
 
   @override
   String get searchHint => 'Enter event name';
@@ -329,4 +329,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yes => 'Yes';
+
+  @override
+  String get available_tickets => 'Available Tickets';
+
+  @override
+  String get done => 'Done';
 }

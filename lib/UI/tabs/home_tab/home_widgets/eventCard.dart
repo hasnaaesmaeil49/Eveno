@@ -146,10 +146,23 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:Eveno/UI/home/EventDetailPage.dart';
 
-class EventCard extends StatelessWidget {
+class EventCard extends StatefulWidget {
   final Event event;
 
   const EventCard({super.key, required this.event});
+
+  @override
+  State<EventCard> createState() => _EventCardState();
+}
+
+class _EventCardState extends State<EventCard> {
+  late bool isFav;
+
+  @override
+  void initState() {
+    super.initState();
+    isFav = widget.event.isFavorite;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,12 +175,6 @@ class EventCard extends StatelessWidget {
     TextStyle textstyleDark = Theme.of(context).brightness == Brightness.dark
         ? AppStyle.white16Medium
         : AppStyle.black16Medium;
-    String imageDark = Theme.of(context).brightness == Brightness.dark
-        ? event.eventImage
-        : event.eventImage;
-
-    // التحقق من إذا كان الحدث مفضلاً بناءً على favoriteEventList
-    bool isFavorite = eventListProvider.favoriteEventList.any((favEvent) => favEvent.id == event.id);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -178,7 +185,7 @@ class EventCard extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => EventDetailPage(event: event),
+              builder: (_) => EventDetailPage(event: widget.event),
             ),
           );
         },
@@ -191,7 +198,7 @@ class EventCard extends StatelessWidget {
               width: 2,
             ),
             image: DecorationImage(
-              image: _getImageProvider(event.eventImage),
+              image: _getImageProvider(widget.event.eventImage),
               fit: BoxFit.cover,
             ),
           ),
@@ -211,11 +218,11 @@ class EventCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        '${event.eventDate.day}',
+                        '${widget.event.eventDate.day}',
                         style: AppStyle.blue20bold,
                       ),
                       Text(
-                        DateFormat('MMM').format(event.eventDate),
+                        DateFormat('MMM').format(widget.event.eventDate),
                         style: AppStyle.blue20bold,
                       ),
                     ],
@@ -239,20 +246,18 @@ class EventCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          event.eventTitle,
+                          widget.event.eventTitle,
                           style: textstyleDark,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       InkWell(
                         onTap: () {
-                          eventListProvider.updateEventFavorite(event);
+                          eventListProvider.updateEventFavorite(widget.event);
                         },
-                        child: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.red,
-                          size: 30,
-                        ),
+                        child: widget.event.isFavorite
+                            ? Icon(Icons.favorite, color: Colors.red, size: 30)
+                            : Icon(Icons.favorite_border, color: Colors.red, size: 30),
                       ),
                     ],
                   ),

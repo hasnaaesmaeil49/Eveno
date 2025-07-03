@@ -89,10 +89,10 @@ class S {
     return Intl.message('Let’s Start', name: 'lets_start', desc: '', args: []);
   }
 
-  /// `Find Events That Inspire You`
+  /// `Find events That Inspire You`
   String get find_events_inspire {
     return Intl.message(
-      'Find Events That Inspire You',
+      'Find events That Inspire You',
       name: 'find_events_inspire',
       desc: '',
       args: [],
@@ -494,20 +494,20 @@ class S {
     );
   }
 
-  /// `Opps! No Favorite Events Found`
+  /// `Opps! No Favorite events Found`
   String get no_favorite_events_found {
     return Intl.message(
-      'Opps! No Favorite Events Found',
+      'Opps! No Favorite events Found',
       name: 'no_favorite_events_found',
       desc: '',
       args: [],
     );
   }
 
-  /// `Opps! No Events Found`
+  /// `Opps! No events Found`
   String get no_events_found {
     return Intl.message(
-      'Opps! No Events Found',
+      'Opps! No events Found',
       name: 'no_events_found',
       desc: '',
       args: [],
@@ -754,9 +754,9 @@ class S {
     );
   }
 
-  /// `My Events`
+  /// `My events`
   String get my_events {
-    return Intl.message('My Events', name: 'my_events', desc: '', args: []);
+    return Intl.message('My events', name: 'my_events', desc: '', args: []);
   }
 
   /// `No booked events`
@@ -779,11 +779,11 @@ class S {
     return Intl.message('Tickets', name: 'tickets', desc: '', args: []);
   }
 
-  /// `Search Events`
-  String get searchEvents {
+  /// `Search events`
+  String get searchevents {
     return Intl.message(
-      'Search Events',
-      name: 'searchEvents',
+      'Search events',
+      name: 'searchevents',
       desc: '',
       args: [],
     );
@@ -832,6 +832,21 @@ class S {
   /// `Yes`
   String get yes {
     return Intl.message('Yes', name: 'yes', desc: '', args: []);
+  }
+
+  /// `Available Tickets`
+  String get available_tickets {
+    return Intl.message(
+      'Available Tickets',
+      name: 'available_tickets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Done`
+  String get done {
+    return Intl.message('Done', name: 'done', desc: '', args: []);
   }
 }
 

@@ -31,6 +31,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "are_you_sure_delete_event": MessageLookupByLibrary.simpleMessage(
       "هل أنت متأكد من حذف الحدث؟",
     ),
+    "available_tickets": MessageLookupByLibrary.simpleMessage(
+      "عدد التذاكر المتاحة",
+    ),
     "birthday": MessageLookupByLibrary.simpleMessage("عيد ميلاد"),
     "book_club": MessageLookupByLibrary.simpleMessage("نادي الكتاب"),
     "booking_confirmed": MessageLookupByLibrary.simpleMessage("تم تأكيد الحجز"),
@@ -63,6 +66,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "انغمس في عالم من الأحداث المصممة لتناسب اهتماماتك الفريدة. سواء كنت من محبي الموسيقى الحية أو ورش العمل الفنية أو التواصل المهني أو ببساطة اكتشاف تجارب جديدة، فلدينا ما يناسب الجميع. ستساعدك توصياتنا المنسقة على استكشاف كل فرصة من حولك والتواصل معها والاستفادة منها قدر الإمكان.",
     ),
     "doNotHaveAccount": MessageLookupByLibrary.simpleMessage("ليس لديك حساب؟"),
+    "done": MessageLookupByLibrary.simpleMessage("تم"),
     "eating": MessageLookupByLibrary.simpleMessage("أكل"),
     "edit_event": MessageLookupByLibrary.simpleMessage("تعديل الحدث"),
     "efforts_event_planning": MessageLookupByLibrary.simpleMessage(
@@ -168,12 +172,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "reset_password": MessageLookupByLibrary.simpleMessage(
       "إعادة تعيين كلمة المرور",
     ),
-    "searchEvents": MessageLookupByLibrary.simpleMessage("البحث عن الفعاليات"),
     "searchHint": MessageLookupByLibrary.simpleMessage("أدخل اسم الفعالية"),
     "search_events": MessageLookupByLibrary.simpleMessage("بحث عن الفعاليات"),
     "search_for_event": MessageLookupByLibrary.simpleMessage(
       "البحث عن حدث معين",
     ),
+    "searchevents": MessageLookupByLibrary.simpleMessage("البحث عن الفعاليات"),
     "select_payment_method": MessageLookupByLibrary.simpleMessage(
       "اختر طريقة الدفع",
     ),

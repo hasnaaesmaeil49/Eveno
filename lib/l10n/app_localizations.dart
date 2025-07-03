@@ -686,11 +686,11 @@ abstract class AppLocalizations {
   /// **'التذاكر'**
   String get tickets;
 
-  /// No description provided for @searchEvents.
+  /// No description provided for @searchevents.
   ///
   /// In ar, this message translates to:
   /// **'البحث عن الفعاليات'**
-  String get searchEvents;
+  String get searchevents;
 
   /// No description provided for @searchHint.
   ///
@@ -727,6 +727,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'نعم'**
   String get yes;
+
+  /// No description provided for @available_tickets.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد التذاكر المتاحة'**
+  String get available_tickets;
+
+  /// No description provided for @done.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم'**
+  String get done;
 }
 
 class _AppLocalizationsDelegate

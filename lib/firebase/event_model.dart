@@ -34,7 +34,7 @@
 //   @HiveField(9)
 //   int availableTickets; // ✅ مضاف هنا
 //
-//   static const String collectionName = 'Events';
+//   static const String collectionName = 'events';
 //
 //   Event({
 //     this.id = '',
@@ -120,7 +120,7 @@ class Event extends HiveObject {
   double ticketPrice;
 
 
-  static const String collectionName = 'Events';
+  static const String collectionName = 'events';
 
   Event({
     this.id = '',

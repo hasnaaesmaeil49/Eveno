@@ -24,10 +24,10 @@ class AddEvent extends StatefulWidget {
   const AddEvent({super.key});
 
   @override
-  State<AddEvent> createState() => _AddEventState();
+  State<AddEvent> createState() => _Addeventstate();
 }
 
-class _AddEventState extends State<AddEvent> {
+class _Addeventstate extends State<AddEvent> {
   int selectedIndex = 0;
   final formKey = GlobalKey<FormState>();
   String formatDate = "";
@@ -131,7 +131,7 @@ class _AddEventState extends State<AddEvent> {
       );
       log('$newEvent');
       FirebaseUtls.addEventToFireStore(newEvent);
-      eventProvider.getAllEvents();
+      eventProvider.getAllevents();
       Provider.of<EventListProvider>(context, listen: false).addEvent(newEvent);
       ToastHelper.showSuccessToast("تم إضافة الحدث بنجاح");
 
@@ -184,7 +184,9 @@ class _AddEventState extends State<AddEvent> {
       Theme.of(context).brightness == Brightness.dark
           ? AppImages.eatingImgDark
           : AppImages.eatingImgLight,
-      '', // For "نوع آخر"
+      Theme.of(context).brightness == Brightness.dark
+        ? AppImages.otherImgDark
+        : AppImages.otherImgLight, // For "نوع آخر"
     ];
 
     selectedImage = eventImageList[selectedIndex];

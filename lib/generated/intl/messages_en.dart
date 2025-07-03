@@ -31,6 +31,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "are_you_sure_delete_event": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to delete the event?",
     ),
+    "available_tickets": MessageLookupByLibrary.simpleMessage(
+      "Available Tickets",
+    ),
     "birthday": MessageLookupByLibrary.simpleMessage("Birthday"),
     "book_club": MessageLookupByLibrary.simpleMessage("Book Club"),
     "booking_confirmed": MessageLookupByLibrary.simpleMessage(
@@ -67,6 +70,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "doNotHaveAccount": MessageLookupByLibrary.simpleMessage(
       "Don\'t have an account?",
     ),
+    "done": MessageLookupByLibrary.simpleMessage("Done"),
     "eating": MessageLookupByLibrary.simpleMessage("Eating"),
     "edit_event": MessageLookupByLibrary.simpleMessage("Edit Event"),
     "efforts_event_planning": MessageLookupByLibrary.simpleMessage(
@@ -94,7 +98,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "exhibition": MessageLookupByLibrary.simpleMessage("Exhibition"),
     "expiry_date": MessageLookupByLibrary.simpleMessage("Expiry Date"),
     "find_events_inspire": MessageLookupByLibrary.simpleMessage(
-      "Find Events That Inspire You",
+      "Find events That Inspire You",
     ),
     "forget_password": MessageLookupByLibrary.simpleMessage("Forget Password?"),
     "forget_password2": MessageLookupByLibrary.simpleMessage("Forget Password"),
@@ -118,16 +122,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "map": MessageLookupByLibrary.simpleMessage("Map"),
     "meeting": MessageLookupByLibrary.simpleMessage("Meeting"),
-    "my_events": MessageLookupByLibrary.simpleMessage("My Events"),
+    "my_events": MessageLookupByLibrary.simpleMessage("My events"),
     "name": MessageLookupByLibrary.simpleMessage("Name"),
     "no_booked_events": MessageLookupByLibrary.simpleMessage(
       "No booked events",
     ),
     "no_events_found": MessageLookupByLibrary.simpleMessage(
-      "Opps! No Events Found",
+      "Opps! No events Found",
     ),
     "no_favorite_events_found": MessageLookupByLibrary.simpleMessage(
-      "Opps! No Favorite Events Found",
+      "Opps! No Favorite events Found",
     ),
     "notification_scheduled": MessageLookupByLibrary.simpleMessage(
       "You will receive a reminder one day beforetheevent",
@@ -172,12 +176,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "re_password": MessageLookupByLibrary.simpleMessage("Re Password"),
     "register": MessageLookupByLibrary.simpleMessage("Register"),
     "reset_password": MessageLookupByLibrary.simpleMessage("Reset Password"),
-    "searchEvents": MessageLookupByLibrary.simpleMessage("Search Events"),
     "searchHint": MessageLookupByLibrary.simpleMessage("Enter event name"),
     "search_events": MessageLookupByLibrary.simpleMessage("Search events"),
     "search_for_event": MessageLookupByLibrary.simpleMessage(
       "Search for Event",
     ),
+    "searchevents": MessageLookupByLibrary.simpleMessage("Search events"),
     "select_payment_method": MessageLookupByLibrary.simpleMessage(
       "Select Payment Method",
     ),

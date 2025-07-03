@@ -1,4 +1,5 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:Eveno/l10n/app_localizations.dart';
@@ -10,7 +11,7 @@ import '../../../utls/app_style.dart';
 import '../edit_event/edit_event.dart';
 import 'home_widgets/eventCard.dart';
 import 'home_widgets/tab_event_widget.dart';
-
+import 'package:Eveno/UI/home/home_screen.dart';
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -19,8 +20,58 @@ class HomeTab extends StatefulWidget {
 }
 
 class HomeTabState extends State<HomeTab> {
-  late Future<List<Event>> futureEvents;
+  late Future<List<Event>> futureevents;
   String searchQuery = '';
+
+  void _showSearchScreen(BuildContext context) {
+    String tempQuery = ''; // Temporary variable to hold input
+    showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: Text(AppLocalizations.of(context)!.searchevents),
+            content: TextField(
+              onChanged: (value) {
+                tempQuery = value; // Update tempQuery as user types
+              },
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.searchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(AppLocalizations.of(context)!.close),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    searchQuery =
+                        tempQuery; // Update searchQuery with the input
+                  });
+                  Navigator.pop(context);
+                  // Notify HomeTab to filter events
+                  if (mounted) {
+                    applySearchFilter(searchQuery);
+                  }
+                },
+                child: Text(AppLocalizations.of(context)!.ok),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void applySearchFilter(String query) {
+    // Logic to filter events based on query
+    print('Filtering with query: $query');
+  }
 
   @override
   void didChangeDependencies() {
@@ -32,16 +83,25 @@ class HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
-    final eventProvider = Provider.of<EventListProvider>(context, listen: false);
-    futureEvents = eventProvider.getEventsFromFirestore();
-    eventProvider.getFavoriteEvent(); // تحميل الأحداث المفضلة
-  }
-
-  void applySearchFilter(String query) {
-    setState(() {
-      searchQuery = query;
+    FirebaseFirestore.instance
+        .collection('events')
+        .get()
+        .then((snapshot) {
+      print('عدد الأحداث: ${snapshot.docs.length}');
+      for (var doc in snapshot.docs) {
+        print("🔥 ${doc.data()}");
+      }
+    }).catchError((e) {
+      print("🛑 حصل Error: $e");
     });
-  }
+
+    final eventProvider = Provider.of<EventListProvider>(
+        context, listen: false);
+    futureevents = eventProvider.geteventsFromFirestore();
+    eventProvider.getFavoriteEvent(); // تحميل الأحداث المفضلة
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,15 +117,13 @@ class HomeTabState extends State<HomeTab> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: appBarColor,
-          title: Row(
+          title: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context)!.welcome_back,
-                      style: AppStyle.white14Bold),
-                  Text("Welcome Back!", style: AppStyle.white24Bold),
+                  SizedBox(width: width * 0.4),
+                  Text("Enjoy Your events ♥", style: AppStyle.white14Bold),
                 ],
               ),
             ],
@@ -75,7 +133,6 @@ class HomeTabState extends State<HomeTab> {
           children: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: width * 0.04),
-              height: height * 0.1,
               decoration: BoxDecoration(
                 color: appBarColor,
                 borderRadius: const BorderRadius.only(
@@ -84,14 +141,40 @@ class HomeTabState extends State<HomeTab> {
                 ),
               ),
               child: Column(
+                //mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    children: [
-                      SizedBox(width: width * 0.02),
-                      Text("Enjoy Your Events", style: AppStyle.white14Bold),
-                    ],
+                  SizedBox(height: height * 0.02),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColor.whiteColor,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: TextField(
+                      onChanged: (value) {
+                        setState(() {
+                         searchQuery = value; // تحديث البحث هنا إذا كنت تستخدم searchQuery
+
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search for Event',
+                        //prefixIcon: Icon(Icons.search, color: AppColor.greyColor),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.search, color: AppColor.greyColor),
+                          onPressed: (){
+                            _showSearchScreen(context);
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+                      ),
+                    ),
                   ),
                   SizedBox(height: height * 0.02),
+                  // TabBar
                   DefaultTabController(
                     length: eventProvider.eventNameList.length,
                     child: TabBar(
@@ -125,9 +208,11 @@ class HomeTabState extends State<HomeTab> {
                 ],
               ),
             ),
+            // القائمة الرئيسية مع Expanded
+
             Expanded(
               child: FutureBuilder<List<Event>>(
-                future: futureEvents,
+                future: futureevents,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -210,28 +295,11 @@ class HomeTabState extends State<HomeTab> {
                                     FirebaseUtls.deleteEvent(event.id);
                                     eventProvider.deleteEvent(event.id);
                                     setState(() {
-                                      futureEvents = eventProvider.getEventsFromFirestore();
+                                      futureevents = eventProvider.geteventsFromFirestore();
                                     });
                                     Navigator.pop(context);
                                   },
                                 ),
-                                //  ListTile(
-                                //   title: Text(event.eventTitle),
-                                //   subtitle: Text(event.eventLocation),
-                                //   trailing: IconButton(
-                                //     icon: Icon(
-                                //       event.isFavorite
-                                //           ? Icons.favorite
-                                //           : Icons.favorite_border,
-                                //       color: event.isFavorite
-                                //           ? Colors.red
-                                //           : Colors.grey,
-                                //     ),
-                                //     onPressed: () {
-                                //       Provider.of<EventListProvider>(context, listen: false).updateEventFavorite(event);
-                                //     },
-                                //   ),
-                                // ),
                               ],
                             ),
                           );

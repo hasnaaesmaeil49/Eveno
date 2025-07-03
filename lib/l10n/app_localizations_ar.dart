@@ -309,7 +309,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tickets => 'التذاكر';
 
   @override
-  String get searchEvents => 'البحث عن الفعاليات';
+  String get searchevents => 'البحث عن الفعاليات';
 
   @override
   String get searchHint => 'أدخل اسم الفعالية';
@@ -328,4 +328,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get yes => 'نعم';
+
+  @override
+  String get available_tickets => 'عدد التذاكر المتاحة';
+
+  @override
+  String get done => 'تم';
 }

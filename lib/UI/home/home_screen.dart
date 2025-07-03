@@ -259,7 +259,7 @@
 //     showDialog(
 //       context: context,
 //       builder: (context) => AlertDialog(
-//         title: Text(AppLocalizations.of(context)!.searchEvents),
+//         title: Text(AppLocalizations.of(context)!.searchevents),
 //         content: TextField(
 //           onChanged: (value) {
 //             // No filtering here, just collecting input
@@ -313,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> tabs = const [
     HomeTab(),
     MapTab(),
-    favoriteTab(),
+    FavoriteTab(),
     ProfileTab(),
   ];
 
@@ -354,12 +354,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           // Search icon
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              _showSearchScreen(context);
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.search),
+          //   onPressed: () {
+          //     _showSearchScreen(context);
+          //   },
+          // ),
         ],
       ),
       body: selectedIndex == 0
@@ -417,49 +417,5 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Function to show search screen
-  void _showSearchScreen(BuildContext context) {
-    String tempQuery = ''; // Temporary variable to hold input
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.searchEvents),
-        content: TextField(
-          onChanged: (value) {
-            tempQuery = value; // Update tempQuery as user types
-          },
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.searchHint,
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.close),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                searchQuery = tempQuery; // Update searchQuery with the input
-              });
-              Navigator.pop(context);
-              // Notify HomeTab to filter events
-              if (selectedIndex == 0) {
-                final homeTabState = context.findAncestorStateOfType< HomeTabState>();
-                if (homeTabState != null) {
-                  homeTabState.applySearchFilter(searchQuery);
-                }
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.ok),
-          ),
-        ],
-      ),
-    );
-  }
+
 }

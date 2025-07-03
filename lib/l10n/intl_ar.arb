@@ -98,7 +98,7 @@
     "no_booked_events": "لا يوجد فعاليات محجوزة بعد",
     "date": "التاريخ",
     "tickets": "التذاكر",
-    "searchEvents": "البحث عن الفعاليات",
+    "searchevents": "البحث عن الفعاليات",
     "searchHint": "أدخل اسم الفعالية",
     "close": "إغلاق",
     "my_events": "أحداثي",
@@ -106,6 +106,9 @@
     "confirm_delete": "تأكيد الحذف",
     "are_you_sure_delete_event": "هل أنت متأكد من حذف الحدث؟",
     "cancel": "إلغاء",
-    "yes":"نعم"
+    "yes":"نعم",
+    "available_tickets": "عدد التذاكر المتاحة",
+    "done":"تم"
+
 
 }

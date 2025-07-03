@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:hive/hive.dart';
-
 import '../UI/tabs/tabs_widgets/toast.dart';
 import '../firebase/firebaseUtls.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EventListProvider extends ChangeNotifier {
   List<Event> eventList = [];
@@ -16,6 +16,9 @@ class EventListProvider extends ChangeNotifier {
   List<Event> favoriteEventList = [];
   List<Event> filtereventList = [];
   Event? selectedEventDetails;
+
+  List<Event> get FavoriteEventList => favoriteEventList;
+
 
   final String eventsBoxName = 'eventsBox';
   final String favoritesBoxName = 'favoritesBox';
@@ -36,7 +39,7 @@ class EventListProvider extends ChangeNotifier {
     ];
   }
 
-  Future<void> loadEventsFromHive() async {
+  Future<void> loadeventsFromHive() async {
     var box = await Hive.openBox<Event>(eventsBoxName);
     eventList = box.values.toList();
     eventList.sort((a, b) => a.eventTime.compareTo(b.eventTime));
@@ -44,7 +47,7 @@ class EventListProvider extends ChangeNotifier {
     favoriteEventList = eventList.where((e) => e.isFavorite).toList();
     notifyListeners();
   }
-  Future<List<Event>> getEventsFromFirestore() async {
+  Future<List<Event>> geteventsFromFirestore() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection(Event.collectionName)
@@ -86,78 +89,99 @@ class EventListProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  void loadEvents() {
+  void loadevents() {
     final box = Hive.box<Event>('eventsBox');
     eventList = box.values.toList();
     notifyListeners();
   }
-  void getAllEvents() async {
-    await loadEventsFromHive();
+  void getAllevents() async {
+    await loadeventsFromHive();
   }
 
-  void getFilterEvents() async {
+  void getFilterevents() async {
     if (eventNameList.isEmpty) return;
-    await loadEventsFromHive();
+    await loadeventsFromHive();
     filtereventList = eventList.where((event) {
       return event.eventName == eventNameList[selectedIndex];
     }).toList();
     notifyListeners();
   }
 
-  // Future<void> loadFavoriteEvents() async {
-  //   final box = await Hive.openBox<Event>(favoritesBoxName);
-  //   favoriteEventList = box.values.toList();
-  //   // تحديث حالة isFavorite لكل حدث في eventList
-  //   for (var event in eventList) {
-  //     event.isFavorite = favoriteEventList.any((fav) => fav.id == event.id);
-  //   }
-  //   notifyListeners();
-  // }
-  // void updateEventFavorite(Event event) async {
-  //   var box = await Hive.openBox<Event>(eventsBoxName);
-  //   event.isFavorite = !event.isFavorite;
-  //   await box.put(event.id, event);
-  //   if (event.isFavorite) {
-  //     favoriteEventList.add(event);
-  //   } else {
-  //     favoriteEventList.removeWhere((e) => e.eventTitle == event.eventTitle);
-  //   }
-  //   notifyListeners();
-  // }
+
+
+  // void updateEventFavorite(Event event){
+  //   FirebaseUtls.getEventCollection().doc(event.id).update({
+  //     'is_favorite': !event.isFavorite,
+  //   }).timeout(const Duration(milliseconds: 500),onTimeout: () {
+  //     ToastHelper.showSuccessToast("Event Updated into Favorite");
+  //   },);
+  //   selectedIndex==0?getAllevents():getFilterevents();
+  //   getFavoriteEvent();
   //
-  // void getFavoriteEvent() async {
-  //   await loadEventsFromHive();
-  //   favoriteEventList = eventList.where((e) => e.isFavorite).toList();
+  // }
+  // void getFavoriteEvent()async{
+  //   QuerySnapshot<Event> querySnapshot =await FirebaseUtls.getEventCollection().orderBy(
+  //     'date',descending: false,
+  //   ).where(
+  //     'is_favorite',isEqualTo: true,
+  //   ).get();
+  //   favoriteEventList=querySnapshot.docs.map((doc){
+  //     return doc.data();
+  //   }).toList();
   //   notifyListeners();
   // }
 
-  void updateEventFavorite(Event event) {
-    FirebaseUtls.getEventCollection().doc(event.id).update({
-      'is_favorite': !event.isFavorite,
-      //'location': newLocation, // تحديث الموقع الجغرافي هنا
 
+  void updateEventFavorite(Event event) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userFavoritesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
+        .doc(event.id);
+
+    // عكس قيمة الفيفوريت
+    final isNowFavorite = !event.isFavorite;
+    event.isFavorite = isNowFavorite;
+
+    // تحديث الحدث في الـ collection الرئيسي (اختياري حسب الحاجة)
+    await FirebaseUtls.getEventCollection().doc(event.id).update({
+      'is_favorite': isNowFavorite,
     });
-      ToastHelper.showSuccessToast("Event Updated into Favorite");
-     //selectedIndex == 0 ? getAllEvents() : getFilterEvents();
-    getFavoriteEvent();
-  }
 
-  void getFavoriteEvent() async {
-    QuerySnapshot<Event> querySnapshot = await FirebaseUtls.getEventCollection()
+    // إضافة أو حذف من مجموعة الفيفوريت الخاصة باليوزر
+    if (isNowFavorite) {
+      await userFavoritesRef.set(event.toMap());
+    } else {
+      await userFavoritesRef.delete();
+    }
+
+    ToastHelper.showSuccessToast("Event Updated in Favorites");
+
+    // تحديث القوائم
+    selectedIndex == 0 ? getAllevents() : getFilterevents();
+    await getFavoriteEvent(); // مهم جدًا يكون await
+  }
+  Future<void> getFavoriteEvent() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('favorites')
         .orderBy('date', descending: false)
-        .where('is_favorite', isEqualTo: true)
         .get();
-    favoriteEventList = querySnapshot.docs.map((doc) {
-      return doc.data();
-    }).toList();
+
+    favoriteEventList =
+        snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
     notifyListeners();
   }
 
 
-
-
-
-  void getEventDetails(String eventId) async {
+   void getEventDetails(String eventId) async {
     var box = await Hive.openBox<Event>(eventsBoxName);
     selectedEventDetails = box.get(eventId);
     notifyListeners();
@@ -166,9 +190,9 @@ class EventListProvider extends ChangeNotifier {
   void getSelectedIndex(int newSelectedIndex) {
     selectedIndex = newSelectedIndex;
     if (selectedIndex == 0) {
-      getAllEvents();
+      getAllevents();
     } else {
-      getFilterEvents();
+      getFilterevents();
     }
   }
 
@@ -192,56 +216,130 @@ class EventListProvider extends ChangeNotifier {
   }
 
 
-  List<Event> myEvents = [];
+  List<Event> myevents = [];
 
-  List<Event> get myEventsList => myEvents;
+  List<Event> get myeventsList => myevents;
 
   EventListProvider() {
-  loadMyEvents(); // تحميل الإيفنتات عند إنشاء الـ Provider
+  loadMyevents(); // تحميل الإيفنتات عند إنشاء الـ Provider
   }
 
-  Future<void> loadMyEvents() async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  if (userId == null) return;
+  // Future<void> loadMyevents() async {
+  // final userId = FirebaseAuth.instance.currentUser?.uid;
+  // if (userId == null) return;
+  //
+  // final snapshot = await FirebaseFirestore.instance
+  //     .collection('users')
+  //     .doc(userId)
+  //     .collection('myevents')
+  //     .get();
+  // myevents = snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
+  // notifyListeners();
+  // }
+  Future<void> loadMyevents() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(userId)
-      .collection('myEvents')
-      .get();
-  myEvents = snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
-  notifyListeners();
+    final boxName = 'myeventsBox_$userId'; // بوكس خاص بكل مستخدم
+    final box = await Hive.openBox<Event>(boxName);
+
+    // 1. عرض البيانات من Hive فورًا
+    myevents = box.values.toList();
+    notifyListeners();
+
+    try {
+      // 2. جلب البيانات من Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('myevents')
+          .get();
+
+      final eventsFromFirestore =
+      snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
+
+      // 3. تحديث Hive ببيانات Firestore
+      await box.clear();
+      for (var event in eventsFromFirestore) {
+        await box.put(event.id, event);
+      }
+
+      myevents = eventsFromFirestore;
+      notifyListeners();
+    } catch (e) {
+      print("Error loading events: $e");
+    }
   }
-
+  // Future<void> addMyEvent(Event event) async {
+  // final userId = FirebaseAuth.instance.currentUser?.uid;
+  // if (userId == null) return;
+  //
+  // await FirebaseFirestore.instance
+  //     .collection('users')
+  //     .doc(userId)
+  //     .collection('myevents')
+  //     .doc(event.id) // افترض إن عندك id فريد
+  //     .set(event.toMap());
+  // myevents.add(event);
+  // notifyListeners();
+  // }
   Future<void> addMyEvent(Event event) async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  if (userId == null) return;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
 
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(userId)
-      .collection('myEvents')
-      .doc(event.id) // افترض إن عندك id فريد
-      .set(event.toMap());
-  myEvents.add(event);
-  notifyListeners();
+    final boxName = 'myeventsBox_$userId';
+    final box = await Hive.openBox<Event>(boxName);
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('myevents')
+        .doc(event.id)
+        .set(event.toMap());
+
+    await box.put(event.id, event); // نخزنه في Hive كمان
+    myevents.add(event);
+    notifyListeners();
   }
 
+  // Future<void> removeMyEvent(int index) async {
+  // final userId = FirebaseAuth.instance.currentUser?.uid;
+  // if (userId == null) return;
+  //
+  // final event = myevents[index];
+  // await FirebaseFirestore.instance
+  //     .collection('users')
+  //     .doc(userId)
+  //     .collection('myevents')
+  //     .doc(event.id)
+  //     .delete();
+  // myevents.removeAt(index);
+  // notifyListeners();
+  // }
   Future<void> removeMyEvent(int index) async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
-  if (userId == null) return;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
 
-  final event = myEvents[index];
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(userId)
-      .collection('myEvents')
-      .doc(event.id)
-      .delete();
-  myEvents.removeAt(index);
-  notifyListeners();
+    final boxName = 'myeventsBox_$userId';
+    final box = await Hive.openBox<Event>(boxName);
+
+    final event = myevents[index];
+
+    // حذف من Firestore
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('myevents')
+        .doc(event.id)
+        .delete();
+
+    // حذف من Hive
+    await box.delete(event.id);
+
+    // حذف من القائمة المعروضة
+    myevents.removeAt(index);
+    notifyListeners();
   }
-
 
 
 }

@@ -58,6 +58,8 @@ class AppImages{
   static  String meetingImgDark="assets/images/meeting_img_dark.png";
   static  String sportImgLight="assets/images/sport_img_light.png";
   static  String sportImgDark="assets/images/sport_img_dark.png";
+  static  String otherImgLight="assets/images/logo.png";
+  static  String otherImgDark="assets/images/logo.png";
   static  String workShopImgLight="assets/images/workshop_img_light.png";
   static  String  workShopImgDark="assets/images/workshop_img_dark.png";
   static  String locationLightIcon="assets/images/location_light_icon.png";

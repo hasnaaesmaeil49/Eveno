@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:Eveno/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart'; // لاستخدام Provider
-import 'package:Eveno/providers/eventList_proider.dart'; // لإضافة الإيفينت لـ My Events
+import 'package:Eveno/providers/eventList_proider.dart'; // لإضافة الإيفينت لـ My events
 import 'package:Eveno/UI/tabs/tabs_widgets/custom_elevated_button.dart';
 import 'package:Eveno/firebase/event_model.dart';
 import 'package:Eveno/utls/app_colo.dart';
@@ -43,7 +43,7 @@ class _BookingScreenState extends State<BookingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.booking_confirmed)),
         );
-        eventProvider.addMyEvent(widget.event); // إضافة لـ My Events
+        eventProvider.addMyEvent(widget.event); // إضافة لـ My events
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -99,14 +99,14 @@ class _BookingScreenState extends State<BookingScreen> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
                         Image.asset(
-                          AppImages.intro2ImageLight,
+                          AppImages.otherImgLight,
                           height: 150,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),
                   )
                       : Image.asset(
-                    AppImages.intro2ImageLight,
+                    AppImages.otherImgLight,
                     height: 150,
                     width: double.infinity,
                     fit: BoxFit.cover,
