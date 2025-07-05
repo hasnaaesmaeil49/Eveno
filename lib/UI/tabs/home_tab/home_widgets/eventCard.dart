@@ -252,10 +252,13 @@ class _EventCardState extends State<EventCard> {
                         ),
                       ),
                       InkWell(
-                        onTap: () {
+                        onTap: () async {
                           eventListProvider.updateEventFavorite(widget.event);
+                          setState(() {
+                            isFav = widget.event.isFavorite;
+                          });
                         },
-                        child: widget.event.isFavorite
+                        child: eventListProvider.favoriteEventIds.contains(widget.event.id)
                             ? Icon(Icons.favorite, color: Colors.red, size: 30)
                             : Icon(Icons.favorite_border, color: Colors.red, size: 30),
                       ),

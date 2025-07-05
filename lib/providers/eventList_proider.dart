@@ -16,7 +16,8 @@ class EventListProvider extends ChangeNotifier {
   List<Event> favoriteEventList = [];
   List<Event> filtereventList = [];
   Event? selectedEventDetails;
-
+  List<Event> allFavoriteEvents = [];
+  List<String> favoriteEventIds = [];
   List<Event> get FavoriteEventList => favoriteEventList;
 
 
@@ -60,7 +61,9 @@ class EventListProvider extends ChangeNotifier {
       filtereventList = eventList;
       favoriteEventList =
           eventList.where((event) => event.isFavorite).toList();
-
+      for (var event in eventList) {
+        event.isFavorite = favoriteEventIds.contains(event.id);
+      }
       notifyListeners();
       return eventList;
     } catch (e) {
@@ -109,27 +112,7 @@ class EventListProvider extends ChangeNotifier {
 
 
 
-  // void updateEventFavorite(Event event){
-  //   FirebaseUtls.getEventCollection().doc(event.id).update({
-  //     'is_favorite': !event.isFavorite,
-  //   }).timeout(const Duration(milliseconds: 500),onTimeout: () {
-  //     ToastHelper.showSuccessToast("Event Updated into Favorite");
-  //   },);
-  //   selectedIndex==0?getAllevents():getFilterevents();
-  //   getFavoriteEvent();
-  //
-  // }
-  // void getFavoriteEvent()async{
-  //   QuerySnapshot<Event> querySnapshot =await FirebaseUtls.getEventCollection().orderBy(
-  //     'date',descending: false,
-  //   ).where(
-  //     'is_favorite',isEqualTo: true,
-  //   ).get();
-  //   favoriteEventList=querySnapshot.docs.map((doc){
-  //     return doc.data();
-  //   }).toList();
-  //   notifyListeners();
-  // }
+
 
 
   void updateEventFavorite(Event event) async {
@@ -144,14 +127,8 @@ class EventListProvider extends ChangeNotifier {
 
     // عكس قيمة الفيفوريت
     final isNowFavorite = !event.isFavorite;
-    event.isFavorite = isNowFavorite;
+     event.isFavorite = isNowFavorite;
 
-    // تحديث الحدث في الـ collection الرئيسي (اختياري حسب الحاجة)
-    await FirebaseUtls.getEventCollection().doc(event.id).update({
-      'is_favorite': isNowFavorite,
-    });
-
-    // إضافة أو حذف من مجموعة الفيفوريت الخاصة باليوزر
     if (isNowFavorite) {
       await userFavoritesRef.set(event.toMap());
     } else {
@@ -164,6 +141,8 @@ class EventListProvider extends ChangeNotifier {
     selectedIndex == 0 ? getAllevents() : getFilterevents();
     await getFavoriteEvent(); // مهم جدًا يكون await
   }
+
+
   Future<void> getFavoriteEvent() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -172,11 +151,13 @@ class EventListProvider extends ChangeNotifier {
         .collection('users')
         .doc(user.uid)
         .collection('favorites')
-        .orderBy('date', descending: false)
+        //.orderBy('date', descending: false)
         .get();
-
+    favoriteEventIds = favoriteEventList.map((e) => e.id).toList();
+    allFavoriteEvents =snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
+    notifyListeners();
     favoriteEventList =
-        snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
+        List.from(allFavoriteEvents);
     notifyListeners();
   }
 
@@ -224,18 +205,7 @@ class EventListProvider extends ChangeNotifier {
   loadMyevents(); // تحميل الإيفنتات عند إنشاء الـ Provider
   }
 
-  // Future<void> loadMyevents() async {
-  // final userId = FirebaseAuth.instance.currentUser?.uid;
-  // if (userId == null) return;
-  //
-  // final snapshot = await FirebaseFirestore.instance
-  //     .collection('users')
-  //     .doc(userId)
-  //     .collection('myevents')
-  //     .get();
-  // myevents = snapshot.docs.map((doc) => Event.fromMap(doc.data())).toList();
-  // notifyListeners();
-  // }
+
   Future<void> loadMyevents() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -270,19 +240,7 @@ class EventListProvider extends ChangeNotifier {
       print("Error loading events: $e");
     }
   }
-  // Future<void> addMyEvent(Event event) async {
-  // final userId = FirebaseAuth.instance.currentUser?.uid;
-  // if (userId == null) return;
-  //
-  // await FirebaseFirestore.instance
-  //     .collection('users')
-  //     .doc(userId)
-  //     .collection('myevents')
-  //     .doc(event.id) // افترض إن عندك id فريد
-  //     .set(event.toMap());
-  // myevents.add(event);
-  // notifyListeners();
-  // }
+
   Future<void> addMyEvent(Event event) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -302,20 +260,7 @@ class EventListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<void> removeMyEvent(int index) async {
-  // final userId = FirebaseAuth.instance.currentUser?.uid;
-  // if (userId == null) return;
-  //
-  // final event = myevents[index];
-  // await FirebaseFirestore.instance
-  //     .collection('users')
-  //     .doc(userId)
-  //     .collection('myevents')
-  //     .doc(event.id)
-  //     .delete();
-  // myevents.removeAt(index);
-  // notifyListeners();
-  // }
+
   Future<void> removeMyEvent(int index) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;

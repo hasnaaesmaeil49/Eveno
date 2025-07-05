@@ -179,29 +179,33 @@ class Event extends HiveObject {
     return {
       'id': id,
       'eventTitle': eventTitle,
+      'eventDescription': eventDescription,
+      'eventImage': eventImage,
+      'eventName': eventName,
       'eventDate': eventDate,
-      // ... أضيفي الحقول التانية
+      'eventTime': eventTime,
+      'eventLocation': eventLocation,
+      'available_tickets': availableTickets,
+      'isFree': isFree,
+      'ticketPrice': ticketPrice,
+      'is_favorite': isFavorite, // ✅ أضفناها هنا
     };
   }
 
   factory Event.fromMap(Map<String, dynamic> map) {
     return Event(
-      id: map['id'],
-      eventTitle: map['eventTitle'],
+      id: map['id'] ?? '',
+      eventTitle: map['eventTitle'] ?? '',
+      eventDescription: map['eventDescription'] ?? '',
+      eventImage: map['eventImage'] ?? '',
+      eventName: map['eventName'] ?? '',
       eventDate: (map['eventDate'] as Timestamp).toDate(),
-        eventDescription: map['description'] ?? '',
-        eventImage: map['image'] ?? '',
-        eventName: map['event_name'] ?? '',
-        eventTime: map['time'] ?? '',
-        eventLocation: map['location'] ?? '',
-        isFavorite: map['is_favorite'] ?? '',
-        availableTickets: map['available_tickets'] ,
-        // ✅ هنا
-        isFree: map['isFree'] ,
-        ticketPrice: map['ticketPrice'] ?? ''
-
-
-      // ... أضيفي التحويلات التانية
+      eventTime: map['eventTime'] ?? '',
+      eventLocation: map['eventLocation'] ?? '',
+      isFavorite: map['is_favorite'] ?? false, // ✅ دي اتظبطت هنا
+      availableTickets: map['available_tickets'] ?? 0,
+      isFree: map['isFree'] ?? true,
+      ticketPrice: map['ticketPrice'] ?? 0.0,
     );
   }
 }
